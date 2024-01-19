@@ -9,7 +9,8 @@
 
 ## Overview
 
-Running the JJM Stock Assessment Model Inside the MSE FLR System
+Running the JJM Stock Assessment Model Inside the MSE FLR System,
+*NOTE: this is to replace original version at <https://github.com/SPRFMO/hcr/FLjjm>*
 
 To install this package, start R and enter:
 
