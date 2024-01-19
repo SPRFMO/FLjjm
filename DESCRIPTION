@@ -1,0 +1,27 @@
+Package: FLjjm
+Title: Running the JJM Stock Assessment Model Inside the MSE FLR System
+Version: 0.1.8
+Date: 2020-07-01
+Authors@R: c(
+  person(given = 'Iago', family = 'Mosqueira', role = c('aut', 'cre'),
+    email = 'iago.mosqueira@wur.nl'),
+  person(given = 'Karolina', family = 'Molla Gazi', role = c('aut'),
+    email = 'karolina.mollagazi@wur.nl'))
+Description: Runs the JJM stock assessment model for Chilean Jack
+  Mackerel inside the MSE system of FLR's mse package.
+Depends: R (>= 3.5.0), methods, FLCore, jjmR (>= 1.2018.02)
+Additional_repositories: http://flr-project.org/R
+Imports: mse, FLFishery, FLasher, data.table, foreach
+Suggests: testthat, knitr, rmarkdown
+VignetteBuilder: knitr
+Encoding: UTF-8
+License: EUPL
+LazyLoad: Yes
+LazyData: No
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.0
+NeedsCompilation: no
+Packaged: 2024-01-15 07:56:52 UTC; mosqu003
+Author: Iago Mosqueira [aut, cre],
+  Karolina Molla Gazi [aut]
+Maintainer: Iago Mosqueira <iago.mosqueira@wur.nl>

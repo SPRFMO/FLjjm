@@ -1,0 +1,46 @@
+import("methods")
+import("FLCore")
+import("FLFishery")
+import("FLasher")
+import("mse")
+import("data.table")
+import("jjmR")
+import("foreach")
+
+importFrom("stats", "setNames")
+
+export(
+  "buildFLBjjm",
+  "buildFLBsjjm",
+  "buildFLFsjjm",
+  "buildFLIsjjm",
+  "buildFLRPsjjm",
+  "buildFLSjjm",
+  "buildFLSsjjm",
+  "buildjjmctl",
+  "buildjjmdata",
+  "cjm.oem",
+  "cjm2.oem",
+  "cperfect.oem",
+  "exejjms",
+  "fwdmov",
+  "fwdmov.om",
+  "jjms",
+  "jjms.sa",
+  "jmets",
+  "loadJJMS",
+  "perfect.oem",
+  "perfcjm.sa",
+#  "projection",
+#  "projection<-",
+  "readFLBjjm",
+  "readFLFsjjm",
+  "readFLIsjjm",
+  "readFLoemjjm",
+  "readFLomjjm",
+  "readFLRPsjjm",
+  "readFLSjjm",
+  "readFLSsjjm",
+  "readMod",
+  "readRep",
+  "runjjms")
