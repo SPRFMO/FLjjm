@@ -1221,6 +1221,11 @@ DATA_SECTION
   int nyrs_zero_catch
   ivector fsh_zero_catch(1,200)
   ivector yrs_zero_catch(1,200)
+ LOCAL_CALCS
+  nyrs_zero_catch = 0; 
+  fsh_zero_catch.initialize();
+  yrs_zero_catch.initialize();
+ END_CALCS
 
   imatrix yrs_ind(1,nind,1,nyrs_ind)         //Years of index value (annual)
   matrix obs_ind(1,nind,1,nyrs_ind)          //values of index value (annual)
@@ -2733,9 +2738,10 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
-      depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
-      depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     }
+		// Moved these outside of time-step loop
+    depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
+    depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
@@ -4672,7 +4678,7 @@ FUNCTION write_proj
  newproj.close();
  
 RUNTIME_SECTION
-  convergence_criteria 1.e-1,1.e-01,1.e-03,1e-5,1e-5
+  convergence_criteria         1.0,1.0,1.e-01,1e-5,1e-5
   maximum_function_evaluations 100,200,300,1500,25000
 
 TOP_OF_MAIN_SECTION
