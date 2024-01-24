@@ -1218,10 +1218,14 @@ DATA_SECTION
   matrix n_sample_fsh_length(1,nfsh,1,nyrs_fsh_length)    //Years of index index value (annual)
   3darray oac_fsh(1,nfsh,1,nyrs_fsh_age,1,nages)
   3darray olc_fsh(1,nfsh,1,nyrs_fsh_length,1,nlength)
-	int nyrs_zero_catch
-	ivector fsh_zero_catch(1,200)
-	ivector yrs_zero_catch(1,200)
-
+  int nyrs_zero_catch
+  ivector fsh_zero_catch(1,200)
+  ivector yrs_zero_catch(1,200)
+ LOCAL_CALCS
+  nyrs_zero_catch = 0; 
+  fsh_zero_catch.initialize();
+  yrs_zero_catch.initialize();
+ END_CALCS
 
   imatrix yrs_ind(1,nind,1,nyrs_ind)         //Years of index value (annual)
   matrix obs_ind(1,nind,1,nyrs_ind)          //values of index value (annual)
@@ -1308,12 +1312,12 @@ DATA_SECTION
   log_input(obs_lse_ind);
   obs_lva_ind = square(obs_lse_ind);
   for (k=1;k<=nfsh;k++)
-		for (i=styr;i<=endyr;i++)
+    for (i=styr;i<=endyr;i++)
       if (catch_bio(k,i)==0.0) {
-			  nyrs_zero_catch++;
-				fsh_zero_catch(nyrs_zero_catch)=k;
-				yrs_zero_catch(nyrs_zero_catch)=i;
-			}
+        nyrs_zero_catch++;
+        fsh_zero_catch(nyrs_zero_catch)=k;
+        yrs_zero_catch(nyrs_zero_catch)=i;
+    }
   log_input(nyrs_zero_catch);
   log_input(fsh_zero_catch);
   log_input(yrs_zero_catch);
@@ -1933,7 +1937,7 @@ FUNCTION write_mceval
   if (mcmcmode != 3)
     write_mceval_hdr();
   mcmcmode = 3;
-  // mceval<<"mcdraw type unit Year Age value"<<endl;
+  // mceval<<"mcdraw type unit year age value"<<endl;
   mc_count++;
   // BY stock
   for (int k=1;k<=nstk;k++)
@@ -1943,11 +1947,13 @@ FUNCTION write_mceval
     mceval<< mc_count<<" SBMSY  "<<k<<" all "<<" all "<<Bmsy(k)<<  endl;
     mceval<< mc_count<<" FMSY   "<<k<<" all "<<" all "<<Fmsy(k)<<  endl;
     mceval<< mc_count<<" R0   "<<k<<" all "<<" all "<<Rzero(k)<<  endl;
-    mceval<< mc_count<<" B0   "<<k<<" all "<<" all "<<Bzero(k)<<  endl;
+    mceval<< mc_count<<" SB0   "<<k<<" all "<<" all "<<Bzero(k)<<  endl;
     for (i=styr;i<=endyr;i++) {
-      // SSB & rec
+      // SSB, F & rec
       mceval<< mc_count<<" SSB      "<<k<<" "<<i<<" all "<<Sp_Biom(k,i)<<  endl;
-      mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
+      mceval<< mc_count<<" Fbar "<<k<<" "<<i<<" all "<<mfexp(fmort(k,i))<<  endl;
+      mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" "<<rec_age<<" "<<recruits(k,i)<<  endl;
+      mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
       for (j=1;j<=nages;j++) 
       {
         // catage, natage
@@ -1965,7 +1971,9 @@ FUNCTION write_mceval
         // SELEX F
         mceval<< mc_count<<" Sel_fsh "<<k<<" "<<i<<" "<<j<<" "<<sel_fsh(k,i,j)<<  endl; 
         mceval<< mc_count<<" C_fsh "<<k<<" "<<i<<" "<<j<<" "<<catage(k,i,j)<<  endl; 
+        mceval<< mc_count<<" F_faa "<<k<<" "<<i<<" "<<j<<" "<<F(k,i,j)<<  endl; 
       }
+        mceval<< mc_count<<" F_fsh "<<k<<" "<<i<<" "<<"all"<<" "<<mean(F(k,i))*max(sel_fsh(k,i))<<  endl; 
     }
   }
   // BY index
@@ -2730,9 +2738,10 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
-      depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
-      depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     }
+		// Moved these outside of time-step loop
+    depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
+    depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
@@ -3067,7 +3076,7 @@ FUNCTION Fmort_Pen
   else 
 	{
     fpen(1) += 0.0001*norm2(F - .2); 
-		// Add extreme penalty to fmort when catches are zero to stabilize MCMC mixing
+  // Add extreme penalty to fmort when catches are zero to stabilize MCMC mixing
   for (int ii=1;ii<=nyrs_zero_catch;ii++)
 	  fpen(2) += square(fmort(fsh_zero_catch(ii),yrs_zero_catch(ii))+14)*100.;
   }
@@ -4061,7 +4070,7 @@ FUNCTION dvariable Requil(dvariable& phi, int iyr, int istk)
   return RecTmp;
   
 FUNCTION write_mceval_hdr
-    mceval<<"mcdraw type Year Age value"<<endl;
+    mceval<<"mcdraw type unit Year Age value"<<endl;
    /*
     for (k=1;k<=nind;k++)
       mceval<< " q_ind_"<< k<< " ";
@@ -4669,7 +4678,7 @@ FUNCTION write_proj
  newproj.close();
  
 RUNTIME_SECTION
-  convergence_criteria 1.e-1,1.e-01,1.e-03,1e-5,1e-5
+  convergence_criteria         1.0,1.0,1.e-01,1e-5,1e-5
   maximum_function_evaluations 100,200,300,1500,25000
 
 TOP_OF_MAIN_SECTION
