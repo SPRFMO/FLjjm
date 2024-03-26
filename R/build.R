@@ -26,7 +26,6 @@
 #'
 #' @seealso \code{\link[FLCore]{FLBiol}}, \code{\link[FLCore]{FLFisheries}}, 
 #' \code{\link[FLCore]{FLIndices}}, \code{\link[FLCore]{FLStock}}
-
 NULL
 
 #' Build an FLBiol from a jjm.output object
