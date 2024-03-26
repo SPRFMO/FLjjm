@@ -13,7 +13,7 @@ Depends: R (>= 3.5.0), methods, FLCore, jjmR (>= 1.2018.02)
 Imports: mse, FLFishery, FLasher, data.table, foreach
 Suggests: testthat, knitr, rmarkdown
 Additional_repositories:
-  http://flr.r-universe.dev
+  http://sprfmo.r-universe.dev
 VignetteBuilder: knitr
 Encoding: UTF-8
 License: EUPL
