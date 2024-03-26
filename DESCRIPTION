@@ -18,7 +18,7 @@ License: EUPL
 LazyLoad: Yes
 LazyData: No
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.1
 NeedsCompilation: no
 Packaged: 2024-01-15 07:56:52 UTC; mosqu003
 Author: Iago Mosqueira [aut, cre],

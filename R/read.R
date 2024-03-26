@@ -340,9 +340,9 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
   dat <- mod[[1]]$data
   ctl <- mod[[1]]$control
 
-  if(its > 1) {
-    dat <- setNames(rep(list(dat), its), nm=seq(its))
-    ctl <- setNames(rep(list(ctl), its), nm=seq(its))
+  if(iter > 1) {
+    dat <- setNames(rep(list(dat), iter), nm=seq(iter))
+    ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
   }
 
   obs$dat <- dat

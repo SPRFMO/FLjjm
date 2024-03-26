@@ -20,11 +20,13 @@
 #' Each function takes a jjm.output object as input, which is the result of running 
 #' the JJMS model. They process this output into various FLR objects for further 
 #' analysis and use within the FLR framework.
+#' @name build
 #'
 #' @author Iago Mosqueira (WMR) \email{iago.mosqueira@wur.nl}
 #'
 #' @seealso \code{\link[FLCore]{FLBiol}}, \code{\link[FLCore]{FLFisheries}}, 
 #' \code{\link[FLCore]{FLIndices}}, \code{\link[FLCore]{FLStock}}
+
 NULL
 
 #' Build an FLBiol from a jjm.output object
@@ -301,7 +303,7 @@ buildFLIsjjm <- function(out) {
   if(info$output$nStock == 2) {
 
     # BUG: index by stock
-   idxsp1 <- lapply(paste0("sel_ind_", c(1:4, 7)), function(x) {
+   idxsp1 <- lapply(paste0("sel_ind_", c(1:4, 7, 8)), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })
@@ -309,15 +311,15 @@ buildFLIsjjm <- function(out) {
       FLQuant(t(outp[[2]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[2]][[x]][,2]), units="", quant="age")
     })
-    idxsp <- FLQuants(c(idxsp1[c(1, 2, 3, 4)], idxsp2[c(1, 2)], idxsp1[c(5)]))
+    idxsp <- FLQuants(c(idxsp1[c(1, 2, 3, 4)], idxsp2[c(1, 2)], idxsp1[c(5, 6)]))
   } else {
     idxsp <- lapply(paste0("sel_ind_", idx), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })
   }
+    names(idxsp) <- nms
 
-  names(idxsp) <- nms
 
   # GET output$q_* - @index.q
   if(info$output$nStock == 2) {
