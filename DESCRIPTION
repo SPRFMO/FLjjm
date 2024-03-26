@@ -1,7 +1,7 @@
 Package: FLjjm
 Title: Running the JJM Stock Assessment Model Inside the MSE FLR System
 Version: 0.1.9.9001
-Date: 2024-03-26
+Date: 2024-03-27
 Authors@R: c(
   person(given = 'Iago', family = 'Mosqueira', role = c('aut', 'cre'),
     email = 'iago.mosqueira@wur.nl'),
@@ -12,7 +12,7 @@ Description: Runs the JJM stock assessment model for Chilean Jack
 Depends: R (>= 3.5.0), methods, FLCore, jjmR (>= 1.2018.02)
 Imports: mse, FLFishery, FLasher, data.table, foreach
 Suggests: testthat, knitr, rmarkdown
-Additional_repositories: https://sprfmo.r-universe.dev
+Additional_repositories: https://flr.r-universe.dev
 VignetteBuilder: knitr
 Encoding: UTF-8
 License: EUPL
