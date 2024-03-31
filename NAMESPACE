@@ -7,7 +7,13 @@ import("data.table")
 import("jjmR")
 import("foreach")
 
-importFrom("stats", "setNames")
+importFrom("progressr", "progressor")
+
+importFrom("stats",
+  "na.omit",
+  "pnorm",
+  "rmultinom",
+  "setNames")
 
 export(
   "buildFLBjjm",

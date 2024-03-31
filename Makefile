@@ -40,7 +40,7 @@ spell:
 
 release: NEWS.md spell docs
 	
-build: README.md NEWS
+build: README.md
 	cd ..;\
 	R CMD build $(PKGSRC) --compact-vignettes
 

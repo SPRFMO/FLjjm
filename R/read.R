@@ -7,6 +7,8 @@
 # Distributed under the terms of the EUPL-1.2
 
 
+globalVariables(c("data", "age", ".", "unit"))
+
 # readFLBjjm (FLBiol) {{{
 
 #' Create an FLBiol from a JJMS model run directory

@@ -1,3 +1,12 @@
+# build.R - DESC
+# FLjjm/R/build.R
+
+# Copyright (c) WUR, 2024.
+# Author: Iago MOSQUEIRA (WMR) <iago.mosqueira@wur.nl>
+#
+# Distributed under the terms of the EUPL-1.2
+
+
 #' Build Functions for FLjjm Package
 #'
 #' These functions are used to build various FLR (Fisheries Library in R) objects 
@@ -24,9 +33,11 @@
 #'
 #' @author Iago Mosqueira (WMR) \email{iago.mosqueira@wur.nl}
 #'
-#' @seealso \code{\link[FLCore]{FLBiol}}, \code{\link[FLCore]{FLFisheries}}, 
+#' @seealso \code{\link[FLCore]{FLBiol}}, \code{\link[FLFishery]{FLFisheries}}, 
 #' \code{\link[FLCore]{FLIndices}}, \code{\link[FLCore]{FLStock}}
 NULL
+
+# buildFLBjjm {{{
 
 #' Build an FLBiol from a jjm.output object
 #'

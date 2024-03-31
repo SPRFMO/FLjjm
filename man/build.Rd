@@ -27,7 +27,7 @@ the JJMS model. They process this output into various FLR objects for further
 analysis and use within the FLR framework.
 }
 \seealso{
-\code{\link[FLCore]{FLBiol}}, \code{\link[FLCore]{FLFisheries}},
+\code{\link[FLCore]{FLBiol}}, \code{\link[FLFishery]{FLFisheries}},
 \code{\link[FLCore]{FLIndices}}, \code{\link[FLCore]{FLStock}}
 }
 \author{

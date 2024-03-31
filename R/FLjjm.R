@@ -24,3 +24,6 @@
 #' @seealso \code{\link[vignette]{FLjjm}} in the FLjjm package for an
 #' overview of the package.
 NULL
+
+globalVariables(c("data", "age", ".", "unit", "inewyrs", "datayrs", "ay",
+  "data_lag", "frq", "it", "idx"))
