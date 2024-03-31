@@ -317,19 +317,21 @@ buildFLIsjjm <- function(out) {
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })
   }
-    names(idxsp) <- nms
+  names(idxsp) <- nms
 
 
   # GET output$q_* - @index.q
   if(info$output$nStock == 2) {
     
-    idxq1 <- lapply(paste0("q_", c(1:4, 7)), function(x) {
-      FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]), units="")
+    idxq1 <- lapply(paste0("q_", c(1:4, 7, 8)), function(x) {
+      FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]),
+        units="")
     })
     idxq2 <- lapply(paste0("q_", c(5, 6)), function(x) {
-      FLQuant(outp[[2]][[x]][,2], dimnames=list(year=outp[[2]][[x]][,1]), units="")
+      FLQuant(outp[[2]][[x]][,2], dimnames=list(year=outp[[2]][[x]][,1]), 
+        units="")
     })
-    idxq <- FLQuants(c(idxq1[c(1, 2, 3, 4)], idxq2[c(1, 2)], idxq1[c(5)]))
+    idxq <- FLQuants(c(idxq1[c(1, 2, 3, 4)], idxq2[c(1, 2)], idxq1[c(5, 6)]))
   } else {
     idxq <- lapply(paste0("q_", idx), function(x) {
       FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]), units="")

@@ -1,2 +1,13 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+NEWS.md
+docs/
+man-roxygen/
+data-raw/
+Makefile
+.git/
+.github/
+_pkgdown.yml
+CONTRIBUTORS.md
+CONTRIBUTING.md
+^\.github$
