@@ -48,6 +48,7 @@ NULL
 #' @return An object of class FLBiol.
 #'
 #' @seealso [FLCore::FLBiol]
+
 buildFLBjjm <- function(out, stock=1, name="CJM") {
   
   out <- out[[1]]
@@ -127,9 +128,10 @@ buildFLBsjjm <- function(out) {
 
   return(bios)
 }
-
+# }}}
 
 # buildFLFsjjm : FLFisheries {{{
+
 # FLFishery
 # |-- capacity: NA
 # |-- effort: F_fsh_* [, 3]
@@ -254,7 +256,7 @@ buildFLFsjjm <- function(out, stock=1) {
 #' @return An `FLIndices` object.
 #'
 #' @examples
-#' idx <- readFLIsjjm("mod1.00",
+#' idx <- readFLIsjjm("h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(idx)
 #' plot(idx)
@@ -313,7 +315,7 @@ buildFLIsjjm <- function(out) {
   if(info$output$nStock == 2) {
 
     # BUG: index by stock
-   idxsp1 <- lapply(paste0("sel_ind_", c(1:4, 7, 8)), function(x) {
+   idxsp1 <- lapply(paste0("sel_ind_", c(1:4, 7)), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })
@@ -321,7 +323,7 @@ buildFLIsjjm <- function(out) {
       FLQuant(t(outp[[2]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[2]][[x]][,2]), units="", quant="age")
     })
-    idxsp <- FLQuants(c(idxsp1[c(1, 2, 3, 4)], idxsp2[c(1, 2)], idxsp1[c(5, 6)]))
+    idxsp <- FLQuants(c(idxsp1[c(1, 2, 3, 4)], idxsp2[c(1, 2)], idxsp1[c(5)]))
   } else {
     idxsp <- lapply(paste0("sel_ind_", idx), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
@@ -334,7 +336,7 @@ buildFLIsjjm <- function(out) {
   # GET output$q_* - @index.q
   if(info$output$nStock == 2) {
     
-    idxq1 <- lapply(paste0("q_", c(1:4, 7, 8)), function(x) {
+    idxq1 <- lapply(paste0("q_", c(1:4, 7)), function(x) {
       FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]),
         units="")
     })
@@ -342,7 +344,7 @@ buildFLIsjjm <- function(out) {
       FLQuant(outp[[2]][[x]][,2], dimnames=list(year=outp[[2]][[x]][,1]), 
         units="")
     })
-    idxq <- FLQuants(c(idxq1[c(1, 2, 3, 4)], idxq2[c(1, 2)], idxq1[c(5, 6)]))
+    idxq <- FLQuants(c(idxq1[c(1, 2, 3, 4)], idxq2[c(1, 2)], idxq1[c(5)]))
   } else {
     idxq <- lapply(paste0("q_", idx), function(x) {
       FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]), units="")
@@ -390,7 +392,7 @@ buildFLIsjjm <- function(out) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLBiol] buildFLBjjm
 #' @examples
-#' rps <- readFLRPsjjm(name = "mod1.00",
+#' rps <- readFLRPsjjm(name = "h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(rps)
 
@@ -612,3 +614,44 @@ buildFLSjjm <- function(out, stock=1, name="CJM") {
   return(stk)
 
 } # }}}
+
+# buildFLSsjjm {{{
+
+#' Build Multiple FLStock Objects from a jjm.output Object
+#'
+#' This function creates a collection of FLStock objects from a jjm.output object. 
+#' It is particularly useful for multi-stock assessments.
+#'
+#' @param out A jjm.output object, typically the output of a stock assessment model.
+#'
+#' @return An FLStocks object containing multiple FLStock objects.
+#'
+#' @seealso \code{\link[FLCore]{FLStock}}, \code{\link[FLCore]{FLStocks}}
+#'
+#' @export
+buildFLSsjjm <- function(out) {
+  
+  # Validate input
+  if (!inherits(out, "jjm.output")) {
+    stop("The 'out' parameter should be a 'jjm.output' object.")
+  }
+
+  # Number of stocks
+  nstks <- out[[1]]$info$output$nStock
+  
+  if (nstks <= 0) {
+    stop("The 'out' object does not contain any stock information.")
+  }
+
+  # Build FLStock objects for each stock
+  stks <- FLStocks(lapply(seq_len(nstks), function(idx) {
+    buildFLSjjm(out, stock=idx)
+  }))
+  
+  # Assigning names (Optional)
+  # If specific names are known for the stocks, they can be assigned here.
+  # Example: names(stks) <- c("Stock1", "Stock2", ...)
+
+  return(stks)
+}
+# }}}

@@ -11,24 +11,24 @@ library(FLjjm)
 
 # SINGLE stock
 
-stk <- readFLSjjm("mod1.00", "single_stock_run", output=TRUE)
+stk <- readFLSjjm("h1_1.07", "single_stock_run", output=TRUE)
 
 # TWO stocks
 
-stks <- readFLSsjjm("mod1.00_2stk", "two_stock_run", output=TRUE)
+stks <- readFLSsjjm("h2_1.07", "two_stock_run", output=TRUE)
 
 # INDICES
 
-idx <- readFLIsjjm("mod1.00", "single_stock_run")
+idx <- readFLIsjjm("h1_1.07", "single_stock_run")
 
-idxs <- readFLIsjjm("mod1.00_2stk", "two_stock_run")
+idxs <- readFLIsjjm("h2_1.07", "two_stock_run")
 
 # dat and ctl
 
-mod <- readMod("mod1.00", "single_stock_run")
+mod <- readMod("h1_1.07", "single_stock_run")
 mod <- mod[[1]][c("data", "control")]
 
-mods <- readMod("mod1.00_2stk", "two_stock_run")
+mods <- readMod("h2_1.07", "two_stock_run")
 mods <- mods[[1]][c("data", "control")]
 
 # ADD iters

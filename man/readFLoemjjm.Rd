@@ -22,11 +22,11 @@ containing the past observations of catch and biology (as an \emph{FLStock} or
 }
 \examples{
 # One stock OM
-oem <- readFLoemjjm(name="mod1.00",
+oem <- readFLoemjjm(name="h1_1.07",
   path=system.file("ext-data", "single_stock", package="FLjjm"))
 oem
 # Two stock OM
-oemtwo <- readFLoemjjm(name="mod1.00_2stk",
+oemtwo <- readFLoemjjm(name="h2_1.07",
   path=system.file("ext-data", "two_stock", package="FLjjm"))
 oemtwo
 }

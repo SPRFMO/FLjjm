@@ -29,7 +29,7 @@ The function currently extracts the following reference points from the
 }
 }
 \examples{
-rps <- readFLRPsjjm(name = "mod1.00",
+rps <- readFLRPsjjm(name = "h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(rps)
 }

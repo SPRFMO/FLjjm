@@ -25,7 +25,7 @@ globalVariables(c("data", "age", ".", "unit"))
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLBiol] buildFLBjjm
 #' @examples
-#' bio <- readFLBjjm(name="mod1.00",
+#' bio <- readFLBjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(bio)
 
@@ -53,7 +53,7 @@ readFLBjjm <- function(name, path, stock=1) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLIndices] [FLCore::FLIndex] buildFLIsjjm
 #' @examples
-#' indices <- readFLIsjjm(name="mod1.00",
+#' indices <- readFLIsjjm(name="h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(indices)
 
@@ -81,7 +81,7 @@ readFLIsjjm <- function(name, path) {
 #'
 #' @seealso [jjmR::readJJM] [FLFishery::FLFisheries] [FLFishery::FLFishery] buildFLFsjjm
 #' @examples
-#' fisheries <- readFLFsjjm(name="mod1.00",
+#' fisheries <- readFLFsjjm(name="h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(fisheries)
 
@@ -109,7 +109,7 @@ readFLFsjjm <- function(name, path) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLStock] buildFLSjjm
 #' @examples
-#' bio <- readFLSjjm(name="mod1.00",
+#' bio <- readFLSjjm(name="h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(bio)
 
@@ -139,7 +139,7 @@ readFLSjjm <- function(name, path, stock=1, output=TRUE) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLStock] buildFLSjjm
 #' @examples
-#' bio <- readFLSsjjm(name="mod1.00_2stk",
+#' bio <- readFLSsjjm(name="h2_1.07",
 #'   path=system.file("ext-data", "two_stock", package="FLjjm"), output=TRUE)
 #' summary(bio)
 
@@ -172,7 +172,7 @@ readFLSsjjm <- function(name, path, output=FALSE) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLBiol] buildFLBjjm
 #' @examples
-#' rps <- readFLRPsjjm(name="mod1.00",
+#' rps <- readFLRPsjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(rps)
 
@@ -203,11 +203,11 @@ readFLRPsjjm <- function(name, path, stock=1) {
 #' @seealso [jjmR::readJJM] FLombf buildFLBjjm buildFLFsjjm
 #' @examples
 #' # One stock OM
-#' om <- readFLomjjm(name="mod1.00",
+#' om <- readFLomjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(om)
 #' # Two stock OM
-#' omtwo <- readFLomjjm(name="mod1.00_2stk",
+#' omtwo <- readFLomjjm(name="h2_1.07",
 #'   path=system.file("ext-data", "two_stock", package="FLjjm"))
 #' summary(omtwo)
 
@@ -309,11 +309,11 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
 #' @seealso [jjmR::readJJM] [mse::FLoem] buildFLSjjm buildFLIsjjm
 #' @examples
 #' # One stock OM
-#' oem <- readFLoemjjm(name="mod1.00",
+#' oem <- readFLoemjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
 #' oem
 #' # Two stock OM
-#' oemtwo <- readFLoemjjm(name="mod1.00_2stk",
+#' oemtwo <- readFLoemjjm(name="h2_1.07",
 #'   path=system.file("ext-data", "two_stock", package="FLjjm"))
 #' oemtwo
 
@@ -331,10 +331,11 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
     idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
     obs <- list(CJM=list(stk=stk, idx=idx))
   } else if (nstks == 2) {
-    stk <- lapply(buildFLSsjjm(mod), propagate, iter=iter)
+    stk <- lapply(seq(2), function(i)
+      propagate(buildFLSojjm(mod, i), iter=iter))
     idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
-    Southern <- list(stk=stk$Southern, idx=idx[c(1,2,3,4,7)])
-    North <- list(stk=stk$North, idx=idx[c(5,6)])
+    Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
+    North <- list(stk=stk[[2]], idx=idx[c(5,6)])
     obs <- list(Southern=Southern, North=North)
   }
 

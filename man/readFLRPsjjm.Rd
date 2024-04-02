@@ -22,7 +22,7 @@ files in a \emph{jjms} folder structure. See \emph{buildFLRPsjjm} to check what
 reference points are being extracted from the inputs outputs of \emph{jjms}.
 }
 \examples{
-rps <- readFLRPsjjm(name="mod1.00",
+rps <- readFLRPsjjm(name="h1_1.07",
   path=system.file("ext-data", "single_stock", package="FLjjm"))
 summary(rps)
 }

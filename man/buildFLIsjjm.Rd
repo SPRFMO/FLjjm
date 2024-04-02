@@ -30,7 +30,7 @@ Slots on each \code{FLIndexBiomass} object are filled with the following informa
 }
 }
 \examples{
-idx <- readFLIsjjm("mod1.00",
+idx <- readFLIsjjm("h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(idx)
 plot(idx)

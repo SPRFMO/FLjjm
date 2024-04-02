@@ -21,7 +21,7 @@ See \emph{buildFLFsjjm} for how each slot is populated from the inputs and
 outputs of \emph{jjms}.
 }
 \examples{
-fisheries <- readFLFsjjm(name="mod1.00",
+fisheries <- readFLFsjjm(name="h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(fisheries)
 }

@@ -26,11 +26,11 @@ corresponding calls to \emph{buildFLjjm} functions.
 }
 \examples{
 # One stock OM
-om <- readFLomjjm(name="mod1.00",
+om <- readFLomjjm(name="h1_1.07",
   path=system.file("ext-data", "single_stock", package="FLjjm"))
 summary(om)
 # Two stock OM
-omtwo <- readFLomjjm(name="mod1.00_2stk",
+omtwo <- readFLomjjm(name="h2_1.07",
   path=system.file("ext-data", "two_stock", package="FLjjm"))
 summary(omtwo)
 }

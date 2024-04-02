@@ -21,7 +21,7 @@ See \emph{buildFLIsjjm} for how each slot is populated from the inputs and
 outputs of \emph{jjms}.
 }
 \examples{
-indices <- readFLIsjjm(name="mod1.00",
+indices <- readFLIsjjm(name="h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(indices)
 }

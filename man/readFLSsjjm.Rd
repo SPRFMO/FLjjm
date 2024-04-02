@@ -20,7 +20,7 @@ files in a \emph{jjms} folder structure. See \emph{buildFLSjjm} for how each slo
 populated from the inputs and outputs of \emph{jjms}.
 }
 \examples{
-bio <- readFLSsjjm(name="mod1.00_2stk",
+bio <- readFLSsjjm(name="h2_1.07",
   path=system.file("ext-data", "two_stock", package="FLjjm"), output=TRUE)
 summary(bio)
 }
