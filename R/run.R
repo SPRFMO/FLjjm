@@ -7,30 +7,6 @@
 # Distributed under the terms of the EUPL-1.2
 
 # .combinejjmsout {{{
-.combinejjmsout <- function(x, y) {
-  
-  # HACK First combine has x$dat as dat list
-  if(!is.null(names(x$dat)[[1]]))
-    if(names(x$dat)[[1]] == "years") {
-    x$dat <- list(x$dat)
-    x$ctl <- list(x$ctl)
-  }
-
-  # ONE stock
-  if(length(x$stock.n) == 1) {
-    return(list(stock.n=combine(x$stock.n, y$stock.n),
-      harvest=combine(x$harvest, y$harvest),
-      dat=c(x$dat, list(y$dat)), ctl=c(x$ctl, list(y$ctl))))
-  
-  # TWO stocks
-  } else {
-    return(list(
-      stock.n=combine(x[[1]], y[[1]]),
-      harvest=combine(x[[2]], y[[2]]),
-      dat=c(x$dat, list(y$dat)), ctl=c(x$ctl, list(y$ctl))))
-  }
-} # }}}
-
 
 #' Combine Fisheries Model Results
 #'
@@ -68,7 +44,9 @@
     ))
   }
 }
+# }}}
 
+# jjms {{{
 
 #' Run JJMS Model for Fisheries Stock Assessment
 #'
@@ -87,10 +65,15 @@
 #'
 #' @return The updated FLStock or list of FLStocks after model execution.
 #' @export
-jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE, clean = mp, lengthcomp_F3 = NULL) {
+jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
+  clean = mp, lengthcomp_F3 = NULL) {
+
   # Determine the number of iterations
   its <- if(is(stock, "FLStock")) {
-    dims(stock)$iter } else { dims(stock[[1]])$iter }
+    dims(stock)$iter
+  } else {
+    dims(stock[[1]])$iter 
+  }
 
   # MP runs using %dopar%
   if(mp) {
@@ -209,7 +192,10 @@ jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE, clean 
     unlink(path, recursive = TRUE, force = TRUE)
 
   return(stock)
-} 
+}
+# }}}
+
+# runjjms {{{
 
 #' Run JJMS Model
 #'
@@ -238,7 +224,9 @@ runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE) {
 
   return(executedPath)
 }
+# }}}
 
+# exejjms {{{
 
 #' Execute JJMS Model
 #'
@@ -254,6 +242,7 @@ runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE) {
 #' @return Invisible path where the model was executed.
 #' @export
 exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
+  
   # GET data file name from ctl:1
   datf <- jjmR:::.getDatFile(file.path(path, paste0(name, ".ctl")))
   datn <- basename(datf)
@@ -323,7 +312,10 @@ exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
 
   # RETURN path
   invisible(path)
-} 
+}
+# }}}
+
+# packjjmsrun {{{
 
 #' Clean Up JJMS Model Run Directory
 #'
@@ -346,4 +338,5 @@ packjjmsrun <- function(path) {
   # Return TRUE if all files were successfully removed, FALSE otherwise
   invisible(all(removalResult))
 }
+# }}}
 

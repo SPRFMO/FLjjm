@@ -609,7 +609,10 @@ buildFLSjjm <- function(out, stock=1, name="CJM") {
   landings(stk) <- FLQuant(c(data$Fcaton[, idx]), dimnames=list(age="all",
     year=dmns$year, area=fis), units="1000 t")
   discards(stk) <- computeDiscards(stk)
-  catch(stk) <- computeCatch(stk, "all")
+  
+  # catch(stk) <- computeCatch(stk, "all")[1:3]
+  catch(stk) <- metrics(stk, metrics=list(catch='landings',
+    catch.n='landings.n', catch.wt='landings.wt'))
 
   return(stk)
 

@@ -122,8 +122,8 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
   names(dimnames(laa)) <- names(dimnames(res$Fagecomp))
   dimnames(laa)[3] <- dimnames(res$Fagecomp)[3]
 
-  # NOTE 1 year delay fleet 4
-  laa[dim(laa)[1], , 4] <- NA
+  # BUG: NOTE 1 year delay fleet 4
+  # laa[dim(laa)[1], , 4] <- NA
   
   # UPDATE Flengthcomp
   if(!is.null(newys)) {
@@ -200,9 +200,15 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
   res$Inumyears[] <- apply(res$Iyears, 2, function(x) sum(!is.na(x)))
 
   # UPDATE Indexerr
-  inder <- as.matrix(model.frame(lapply(idx,
-    function(x) window(index.var(x), start=miny, end=maxy)), drop=TRUE)[,-1])
-  dimnames(inder) <- list(years=seq(miny, maxy), paste0("index", seq(length(idx))))
+  inder <- as.matrix(model.frame(
+    lapply(idx, function(x) window(index.var(x), start=miny, end=maxy)),
+      drop=TRUE)[,-1])
+
+  dimnames(inder) <- list(years=seq(miny, maxy),
+    paste0("index", seq(length(idx))))
+
+  # BUG:
+  inder[is.na(iyrs)] <- NA
 
   res$Indexerr <- inder
 
@@ -362,7 +368,7 @@ buildjjmctl <- function(stk, idx, dat, ctl, ...){
   return(res)
 } # }}}
 
-# functions {{{
+# auxiliary functions {{{
 
 # dmatrix()
   dmatrix <- function(x) {

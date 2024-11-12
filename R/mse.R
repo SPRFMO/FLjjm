@@ -1,3 +1,14 @@
+# mse.R - DESC
+# FLjjm/R/msea.R
+
+# Copyright (c) WUR, 2021-24.
+# Author: Iago MOSQUEIRA (WMR) <iago.mosqueira@wur.nl>
+#
+# Distributed under the terms of the EUPL-1.2
+
+
+# cjm.oem {{{
+
 #' Update Observations in CJM Fishery Operation Model
 #'
 #' Updates stock and index observations in a CJM fishery operation model based on 
@@ -13,6 +24,7 @@
 #' @return A list with updated stock data, indices, observations, and tracking information.
 #' @export
 cjm.oem <- function(stk, deviances, observations, args, tracking, F3sel) {
+
   # Extract args
   spread(args)
 
@@ -31,7 +43,8 @@ cjm.oem <- function(stk, deviances, observations, args, tracking, F3sel) {
 
   # Update indices
   idx <- observations$idx
-  inds <- unlist(lapply(idx, function(x) all(inewyrs %in% dimnames(index(x))$year)))
+  inds <- unlist(lapply(idx, function(x)
+    all(inewyrs %in% dimnames(index(x))$year)))
 
   # Compute current indices - TODO: Delay
   idx[inds] <- Map(function(x, y) {
@@ -53,9 +66,13 @@ cjm.oem <- function(stk, deviances, observations, args, tracking, F3sel) {
     return(x)
   }, x = observations$idx[inds], y = idx[inds])
 
-  return(list(stk = observations$stk[, datayrs], idx = idx, observations = observations, tracking = tracking))
+  return(list(stk = observations$stk[, datayrs], idx = idx,
+    observations = observations, tracking = tracking))
 }
 
+# }}}
+
+# cjm2.oem {{{
 
 #' Update Observations in Fishery Operation Model
 #'
@@ -120,8 +137,9 @@ cjm2.oem <- function(om, deviances, observations, args, tracking) {
   return(list(stk = window(observations$stk, start = datayrs[1], end = datayrs[length(datayrs)]),
               idx = FLIndices(idx), observations = observations, tracking = tracking))
 }
+# }}}
 
-
+# cperfect.oem {{{
 
 #' Create a Perfect Observation Error Model
 #'
@@ -177,7 +195,9 @@ cperfect.oem <- function(stk, deviances, observations, args, tracking, biomass =
 
   list(stk=stk, idx=idx, observations=observations, tracking=tracking)
 }
+# }}}
 
+# jjms.sa {{{
 
 #' JJMS Stock Assessment
 #'
@@ -191,6 +211,8 @@ cperfect.oem <- function(stk, deviances, observations, args, tracking, biomass =
 #'
 #' @return A list with the resulting stock data, tracking information, and arguments.
 #' @export
+#' @examples
+
 jjms.sa <- function(stk, idx, args, tracking, ...) {
 
   # ASSEMBLE args, names as for jjms()
@@ -201,9 +223,9 @@ jjms.sa <- function(stk, idx, args, tracking, ...) {
 
   sargs$lengthcomp_F3 <- attr(stk, "lengthcomp_F3")
 
-  res <- do.call("jjms", sargs)
+  res <- do.call(jjms, sargs)
 
-  # track(tracking, "conv.est") <- TRUE
+  track(tracking, "conv.est") <- 1
   
   list(stk = res, tracking = tracking, args=list(
     dat=attr(res, "dat"), ctl=attr(res, "ctl")))
@@ -211,6 +233,7 @@ jjms.sa <- function(stk, idx, args, tracking, ...) {
 } # }}}
 
 # perfcjm.sa {{{
+
 #' Perfect CJM Stock Assessment
 #'
 #' A placeholder function for perfect CJM stock assessment, potentially for testing or 
@@ -233,6 +256,8 @@ perfcjm.sa <- function(stk, idx, args, tracking, ...) {
     dat=sargs$dat, ctl=sargs$ctl))
 
 } # }}}
+
+# cjmfwc {{{
 
 #' Converts FLQuants with Fleets as Areas into a fwdControl Object
 #'
@@ -268,6 +293,9 @@ cjmfwc <- function(flqs, quant = "catch", nstocks = 1) {
     ))
   }
 }
+# }}}
+
+# fwdmov.om {{{
 
 #' Forward Movement Operation Model
 #'
@@ -332,8 +360,9 @@ fwdmov.om <- function(om, ctrl, FCB = FCB(ctrl), rates, time = 0, ...) {
 
   return(list(object = om))
 }
+# }}}
 
-
+# fwdmov {{{
 
 #' Forward Movement Simulation
 #'
@@ -376,7 +405,9 @@ fwdmov <- function(object, control, rates, time = 0) {
 
   return(object)
 }
+# }}}
 
+# cjmage2len {{{
 
 #' Convert Age Composition to Length Composition for Landings
 #'
@@ -396,13 +427,17 @@ fwdmov <- function(object, control, rates, time = 0) {
 #'
 #' @return A matrix representing length composition for each year.
 #' @export
-cjmage2len <- function(landings, selex, ess = 100, L_inf = 80.4, k = 0.16, L_0 = 18,
-                       M = 0.33, CVlen = 0.09, ages = an(dimnames(landings)$age), 
-                       sample_type = "catch") {
+cjmage2len <- function(landings, selex, ess = 100, L_inf = 80.4, k = 0.16,
+  L_0 = 18, M = 0.33, CVlen = 0.09, ages = an(dimnames(landings)$age),
+  sample_type = "catch") {
 
   # Convert landings and selectivity to matrices
-  N_at <- as.matrix(landings, drop = TRUE)
-  S_a <- as.matrix(selex, drop = TRUE)
+#  N_at <- as.matrix(landings, drop = TRUE)
+#  S_a <- as.matrix(selex, drop = TRUE)
+
+  # BUG:
+  N_at <- matrix(c(landings), nrow=12, ncol=1)
+  S_a <- matrix(c(selex), nrow=12, ncol=1)
 
   # Number of years
   tyears <- ncol(landings)
@@ -425,8 +460,9 @@ cjmage2len <- function(landings, selex, ess = 100, L_inf = 80.4, k = 0.16, L_0 =
 
   return(res)
 }
+# }}}
 
-
+# AgeToLengthComp {{{
 
 #' Convert Age Composition to Length Composition
 #'
@@ -484,7 +520,9 @@ AgeToLengthComp <- function(lh, S_a, tyears, N_at, comp_sample, sample_type = 'c
   Outs <- list(plba = plba, plb = plb, page = page, LF = LF)
   return(Outs)
 }
+# }}}
 
+# metrics(FLStocks) {{{
 
 #' Calculate Average Fishing Mortality across FLStocks
 #'
@@ -525,5 +563,4 @@ setMethod("catch", signature(object="FLStocks"), function(object) {
   total_catch <- Reduce(`+`, lapply(object, function(x) areaSums(catch(x))))
   return(total_catch)
 })
-
-
+# }}}

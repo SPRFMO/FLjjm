@@ -10,7 +10,7 @@
 
 data(statistics, package="mse")
 
-statistics <- statistics[c("SBMSY", "FMSY", "PSBMSY", "PSBlim", "C",
+statistics <- statistics[c("SBMSY", "FMSY", "PSBMSY", "PSBlim", "C", "F", "SB",
   "IACC", "PC0", "green")]
 
 statistics$PSBlim[[1]]  <- ~yearMeans((SB/(SBMSY * 0.10)) > 1)

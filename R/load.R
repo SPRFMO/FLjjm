@@ -161,3 +161,4 @@ loadJJMS <- function(name, path) {
   return(list(biols = bio, fisheries = fis, indices = ins, refpts = rps, stk = stk,
               dat = mod[[1]]$dat, ctl = mod[[1]]$ctl))
 }
+
