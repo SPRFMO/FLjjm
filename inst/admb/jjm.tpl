@@ -2011,7 +2011,7 @@ FUNCTION write_mceval
   /*
   // sdreport_matrix Sp_Biom(1,nstk,styr_sp,endyr+1)
   mc_count++;
-    // mceval<<"mcdraw type Year Age value"<<endl;
+    // mceval<<"mcdraw type unit Year Age value"<<endl;
   for (int k=1;k<=nstk;k++)
   {
     for (i=styr;i<=endyr;i++)
@@ -4096,7 +4096,7 @@ FUNCTION dvariable Requil(dvariable& phi, int iyr, int istk)
   return RecTmp;
   
 FUNCTION write_mceval_hdr
-    mceval<<"mcdraw type Year Age value"<<endl;
+    mceval<<"mcdraw type unit Year Age value"<<endl;
    /*
     for (k=1;k<=nind;k++)
       mceval<< " q_ind_"<< k<< " ";
