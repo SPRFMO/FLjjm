@@ -6,6 +6,12 @@
 #
 # Distributed under the terms of the EUPL-1.2
 
+# jjms
+# └── runjjms
+#     └── exejjms
+#         │── calljjms
+#         └── packjjms
+
 # .combinejjmsout {{{
 
 #' Combine Fisheries Model Results
@@ -210,6 +216,7 @@ jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
 #' @return The path where the JJMS model was executed.
 #' @export
 runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE) {
+
   # Extract model name
   modnm <- mod[[1]]$control$modelName
 
@@ -230,8 +237,8 @@ runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE) {
 
 #' Execute JJMS Model
 #'
-#' Executes the JJMS model with specified arguments, manages file operations for the model run,
-#' and optionally cleans up the output directory.
+#' Executes the JJMS model with specified arguments, manages file operations
+#' for the model run, and optionally cleans up the output directory.
 #'
 #' @param name The name of the JJMS model.
 #' @param path The path to the directory where the JJMS model is located.
@@ -248,33 +255,7 @@ exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
   datn <- basename(datf)
 
   # CALL jjms
-  if (get_os() %in% c("linux", "osx")) {
-    exe <- paste("jjms -nox -ind", paste0(name, ".ctl"), "-iprint 100", args)
-    if(verbose)
-      echoc <- system(paste0("cd ", path, "; ", exe), wait=TRUE)
-    else
-      echoc <- system(paste0("cd ", path, "; ", exe, " > logfile.txt"),
-        wait=TRUE, ignore.stdout = TRUE, ignore.stderr = TRUE)
-  } else if(get_os() == "windows") {
-    exe <- paste("jjms.exe -nox -ind", paste0(name, ".ctl"), "-iprint 100", 
-      args)
-    if (verbose) {
-      echoc <- shell(paste0("cd /D", shQuote(path), " & ", exe))
-    } else {
-      echoc <- shell(paste0("cd /D", shQuote(path), " & ", exe, " > logfile.txt"))
-    }
-  }
-
-  # STOP if failed
-  if (echoc == 127)
-    stop("jjms could not be run, check 'input.log'")
-
-  # STOP if run failed: CHECK for cor
-  if(!grepl("-nohess", args))
-    if(!file.exists(file.path(path, "jjms.std")))
-      stop("jjms did not converge")
-
-  # TODO CHECK gradient.dat$R0
+  calljjms(name, path, args=args, verbose=verbose)
 
   # ORGANIZE files in folders
 
@@ -315,6 +296,63 @@ exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
 }
 # }}}
 
+#getjjms {{{
+getjjms <- function(os=get_os()) {
+  return(list.files(system.file('bin', os, package="FLjjm"))[1])
+}
+# }}}
+
+# calljjms {{{
+
+calljjms <- function(name, path, args = "-iprint 100", verbose = TRUE) {
+
+  exe <- getjjms()
+
+  # ASSEMBLE call & RUN by OS
+  if (get_os() == "linux") {
+
+    cmd <- paste(exe, "-nox -ind", paste0(name, ".ctl"), args)
+    
+    if(verbose)
+      echoc <- system(paste0("cd ", path, "; ", cmd), wait=TRUE)
+    else
+      echoc <- system(paste0("cd ", path, "; ", cmd, " > logfile.txt"),
+        wait=TRUE, ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+  } else if (get_os() == "osx") {
+
+    cmd <- paste(exe, "-nox -ind", paste0(name, ".ctl"), args)
+    
+    if(verbose)
+      echoc <- system(paste0("cd ", path, "; ", cmd), wait=TRUE)
+    else
+      echoc <- system(paste0("cd ", path, "; ", cmd, " > logfile.txt"),
+        wait=TRUE, ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+  } else if(get_os() == "windows") {
+    
+    cmd <- paste(exe, " -nox -ind", paste0(name, ".ctl"), args)
+
+    if (verbose) {
+      echoc <- shell(paste0("cd /D", shQuote(path), " & ", cmd))
+    } else {
+      echoc <- shell(paste0("cd /D", shQuote(path), " & ", cmd, " > logfile.txt"))
+    }
+  }
+
+  # STOP if failed
+  if (echoc == 127)
+    stop("jjms could not be run, check 'input.log'")
+
+  # STOP if run failed: CHECK for cor
+  if(!grepl("-nohess", args))
+    if(!file.exists(file.path(path, "jjms.std")))
+      stop("jjms did not converge")
+
+  invisible(TRUE)
+}
+# }}}
+
 # packjjmsrun {{{
 
 #' Clean Up JJMS Model Run Directory
@@ -339,4 +377,3 @@ packjjmsrun <- function(path) {
   invisible(all(removalResult))
 }
 # }}}
-

@@ -220,15 +220,16 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
   nstks <- mod[[1]]$info$output$nStock
 
   # BUILD FLBiols
-  if(nstks == 1)
+  if(nstks == 1) {
     biols <- FLBiols(CJM=buildFLBjjm(mod))
-  else if (nstks == 2)
+  } else if (nstks == 2) {
     biols <- buildFLBsjjm(mod)
+  }
 
   # BUILD FLFisheries
-  if(nstks == 1)
+  if(nstks == 1) {
     fisheries <- buildFLFsjjm(mod)
-  else {
+  } else {
     fisheries <- lapply(seq(nstks), buildFLFsjjm, out=mod)
 
     fisheries[[1]] <- lapply(fisheries[[1]], function(x) {
@@ -244,10 +245,11 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
   }
 
   # BUILD refpts
-  if(nstks == 1)
+  if(nstks == 1) {
     refpts <- FLPars(CJM=buildFLRPsjjm(mod))
-  else if (nstks == 2)
+  } else if (nstks == 2) {
     refpts <- FLPars(Southern=buildFLRPsjjm(mod, 1), North=buildFLRPsjjm(mod, 2))
+  }
 
   om <- FLombf(name=name, biols=biols, fisheries=fisheries,
     refpts=refpts, FCB=FCB(fcb2int(guessfcb(biols,
