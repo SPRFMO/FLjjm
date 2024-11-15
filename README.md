@@ -1,6 +1,6 @@
 # FLjjm
 
-- Version: 0.1.9.9109
+- Version: 0.2.0
 - Date: 15-11-2024
 - Authors: Iago MOSQUEIRA (WMR), Karolina MOLLA GAZI (WMR).
 - Maintainer: Iago MOSQUEIRA (WMR) <iago.mosqueira@wur.nl>
