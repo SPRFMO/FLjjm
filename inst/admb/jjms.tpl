@@ -1959,6 +1959,9 @@ FUNCTION write_mceval
       mceval<< mc_count<<" Fbar "<<k<<" "<<i<<" all "<<mfexp(fmort(k,i))<<  endl;
       mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
       mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
+    // ADD Bmsy(y) - IM
+    get_msy(i);
+    mceval<< mc_count<<" SBMSYy  "<<k<<" "<<i<<" all "<<Bmsy(k)<<  endl;
       for (j=1;j<=nages;j++) 
       {
         // catage, natage

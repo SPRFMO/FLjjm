@@ -433,6 +433,14 @@ readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
     return(x)
   })
 
+  # COMPUTE dynamic SBMSY, last 10 years
+  lasten <- seq(tab[name == "Fbar", max(as.numeric(year))] - 9, length=10)
+  meansbmsy <- tab[name == "SBMSYy" & year %in% lasten, .(data=mean(data)),
+    by=iter]
+
+  # ASSIGN as SBMSY
+  refpts[[1]]$SBMSY <- meansbmsy$data
+
   # EXTRACT n
   ns <- tab[name == "N_stock", list(iter, unit, year, age, data)]
  
