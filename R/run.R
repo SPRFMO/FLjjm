@@ -298,7 +298,8 @@ exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
 
 #getjjms {{{
 getjjms <- function(os=get_os()) {
-  return(list.files(system.file('bin', os, package="FLjjm"))[1])
+  return(list.files(system.file('bin', os, package="FLjjm"),
+    full.names=TRUE)[1])
 }
 # }}}
 
