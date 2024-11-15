@@ -1956,7 +1956,9 @@ FUNCTION write_mceval
     for (i=styr;i<=endyr;i++) {
       // SSB & rec
       mceval<< mc_count<<" SSB      "<<k<<" "<<i<<" all "<<Sp_Biom(k,i)<<  endl;
+      mceval<< mc_count<<" Fbar "<<k<<" "<<i<<" all "<<mfexp(fmort(k,i))<<  endl;
       mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
+      mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
       for (j=1;j<=nages;j++) 
       {
         // catage, natage
@@ -1974,7 +1976,9 @@ FUNCTION write_mceval
         // SELEX F
         mceval<< mc_count<<" Sel_fsh "<<k<<" "<<i<<" "<<j<<" "<<sel_fsh(k,i,j)<<  endl; 
         mceval<< mc_count<<" C_fsh "<<k<<" "<<i<<" "<<j<<" "<<catage(k,i,j)<<  endl; 
+        mceval<< mc_count<<" F_faa "<<k<<" "<<i<<" "<<j<<" "<<F(k,i,j)<<  endl; 
       }
+        mceval<< mc_count<<" F_fsh "<<k<<" "<<i<<" "<<"all"<<" "<<mean(F(k,i))*max(sel_fsh(k,i))<<  endl; 
     }
   }
   // BY index
@@ -2739,9 +2743,10 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
-      depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
-      depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     }
+		// Moved these outside of time-step loop
+    depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
+    depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
