@@ -50,4 +50,5 @@ export(
   "readFLSsjjm",
   "readMod",
   "readRep",
-  "runjjms")
+  "runjjms",
+  "slick_performance")
