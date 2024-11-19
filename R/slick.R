@@ -56,6 +56,13 @@ slick_performance <- function(x, om, statistics,
   # COMBINE
   res <- rbindlist(list(fut, res), use.names=TRUE)
 
+  # ORDER columns
+  setcolorder(res, neworder=c('om', 'mp', 'biol', 'statistic', 'year',
+    'iter', 'data', 'name', 'desc'))
+
+  # SET search index
+  setorder(res, om, mp, year, iter)
+
   return(res)
 }
 # }}}
