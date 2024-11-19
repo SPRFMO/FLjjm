@@ -50,8 +50,12 @@ slick_performance <- function(x, om, statistics,
   # ADD om name
   pas[, om := name(om)]
 
-  # COMBINE
+  # ADD mp names
   res <- cbind(pas, data.table(mp=rep(names(x), each=dim(pas)[1])))
+
+  # COMBINE
+  res <- rbindlist(list(fut, res), use.names=TRUE)
+
+  return(res)
 }
 # }}}
-
