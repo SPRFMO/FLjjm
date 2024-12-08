@@ -1,5 +1,5 @@
 # mse.R - DESC
-# FLjjm/R/msea.R
+# FLjjm/R/mse.R
 
 # Copyright (c) WUR, 2021-24.
 # Author: Iago MOSQUEIRA (WMR) <iago.mosqueira@wur.nl>
@@ -9,191 +9,56 @@
 
 # cjm.oem {{{
 
-#' Update Observations in CJM Fishery Operation Model
-#'
-#' Updates stock and index observations in a CJM fishery operation model based on 
-#' provided arguments, tracking information, and F3 selectivity.
-#'
-#' @param stk Stock data.
-#' @param deviances Deviances for the model.
-#' @param observations Observations data.
-#' @param args Argument list containing model parameters.
-#' @param tracking Tracking information.
-#' @param F3sel F3 selectivity data.
-#'
-#' @return A list with updated stock data, indices, observations, and tracking information.
-#' @export
-cjm.oem <- function(stk, deviances, observations, args, tracking, F3sel) {
+cjm.oem <- function(stk, deviances, observations, stability=1,
+  wts=TRUE, F3sel, args, tracking) {
 
-  # Extract args
+  # SET dimension args
   spread(args)
+  dyrs <- ac(seq(dy - frq + 1, dy))
 
-  # Set observation years
-  obsyrs <- ac(seq(ay - data_lag - frq + 1, ay - data_lag))
+  # CALL sampling.oem for stk & idx
+  res <- sampling.oem(stk=stk, deviances=deviances,
+    observations=observations, args=args, tracking=tracking)
 
-  # Assign new observations to stock
-  observations$stk[, obsyrs] <- stk[, obsyrs]
+  # DROP 2022 from idx[[2]]
+  res$idx[[2]] <- res$idx[[2]][, -39]
+
+  # UPDATE idx: 2, 3, 6, 7
+  for(i in c(2,3,6,7))
+    observations$idx[[i]][, dyrs] <- res$idx[[i]][, dyrs]
+
+  # DROP last year from idx[[7]]
+  res$idx[[7]] <- window(res$idx[[7]], end=dy-1)
 
   # Add F3 length samples
   f3lengths <- lapply(seq(it), function(j) {
-    cjmage2len(iter(landings.n(stk)[,,,,3][, obsyrs], j),
-               iter(expand(F3sel, year = obsyrs), j))
+    cjmage2len(iter(landings.n(res$stk)[,,,,3][, dyrs], j),
+               iter(expand(F3sel, year = dyrs), j))
   })
-  attr(observations$stk, "lengthcomp_F3") <- f3lengths
 
-  # Update indices
-  idx <- observations$idx
-  inds <- unlist(lapply(idx, function(x)
-    all(inewyrs %in% dimnames(index(x))$year)))
+  # CREATE dat & ctl
+  dat <- observations$dat
+  ctl <- observations$ctl
 
-  # Compute current indices - TODO: Delay
-  idx[inds] <- Map(function(x, y) {
-    index(x)[, y] <- index.hat(x[, y], stk[, y])
-    return(x)
-  }, x = idx[inds], y = ac(inewyrs))
-
-  # Update catch.n (proportions at age) - Index 2
-  idx[2] <- Map(function(x, y) {
-    catch.n(x)[, y] <- stock.n(stk)[, y] * sel.pattern(x)[, y] * exp(-z(stk)[, y] * mean(range(x, c("startf", "endf"))))
-    catch.n(x)[, y] <- catch.n(x)[, y] %/% quantSums(catch.n(x)[, y])
-    return(x)
-  }, x = idx[2], y = ac(inewyrs))
-  
-  # Update observations
-  observations$idx[inds] <- Map(function(x, y) {
-    yrs <- dimnames(index(y))$year
-    x[, yrs] <- y
-    return(x)
-  }, x = observations$idx[inds], y = idx[inds])
-
-  return(list(stk = observations$stk[, datayrs], idx = idx,
-    observations = observations, tracking = tracking))
-}
-
-# }}}
-
-# cjm2.oem {{{
-
-#' Update Observations in Fishery Operation Model
-#'
-#' This function updates stock observations and indices in a fishery operation model 
-#' (OM) based on provided arguments and tracking information.
-#'
-#' @param om Fishery operation model object.
-#' @param deviances Deviances for the model.
-#' @param observations Observations data.
-#' @param args Argument list containing model parameters.
-#' @param tracking Tracking information.
-#'
-#' @return A list with updated stock data, indices, observations, and tracking information.
-#' @export
-cjm2.oem <- function(om, deviances, observations, args, tracking) {
-  # Compute year ranges
-  datayrs <- ac(seq(args$y0, args$ay - args$data_lag))
-  obsyrs <- ac(seq(args$y0, args$ay - args$data_lag - args$frq))
-  newyrs <- ac(seq(args$ay - args$data_lag - args$frq, args$ay - args$data_lag))
-
-  # Extract and process stock data
-  stk0 <- lapply(observations$stk, window, start = args$y0, end = args$ay - args$data_lag - args$frq)
-  stk1 <- suppressWarnings(as.FLStock(om@biols[[1]], om@fisheries[c(1, 2, 4)], full = TRUE)[, newyrs])
-  stk2 <- suppressWarnings(as.FLStock(om@biols[[length(biols(om))]], om@fisheries[3], full = TRUE)[, newyrs])
-
-  # Process landings and discards for each fleet/area
-  processFleetData <- function(fleet, newyrs) {
-    lapply(c("landings.n", "landings.wt", "discards.n", "discards.wt"), function(i) {
-      ob <- Reduce(abind, lapply(om@fisheries[fleet], function(x) do.call(i, list(x, 1))))
-      dimnames(ob)$area <- names(om@fisheries[fleet])
-      slot(stk, i) <- ob[, newyrs]
-    })
+  for(i in seq(it)) {
+    ctl[[i]] <- buildjjmctl(iter(res$stk, i), iter(res$idx, i), dat[[i]],
+      ctl[[i]])
+    dat[[i]] <- buildjjmdata(iter(res$stk, i), iter(res$idx, i), dat[[i]],
+      lengthcomp_F3=f3lengths[[i]])
   }
 
-  processFleetData(c(1, 2, 4), newyrs)
-  processFleetData(c(3), newyrs)
+  # STORE new observations in observations
+  observations$stk[, dyrs] <- res$stk[, dyrs]
 
-  # Update aggregated slots
-  updateStockData <- function(stk) {
-    landings(stk) <- computeLandings(stk)
-    discards(stk) <- computeDiscards(stk)
-    catch(stk) <- computeCatch(stk, "all")
-    units(harvest(stk)) <- "f"
-  }
+  # KEEP new dat & ctl
+  observations[c('dat', 'ctl')]  <- list(dat, ctl)
 
-  updateStockData(stk1)
-  updateStockData(stk2)
+  # ATTACH to stk
+  attr(res$stk, "ctl") <- ctl
+  attr(res$stk, "dat") <- dat
 
-  # Append new observations
-  stk <- FLStocks(Southern = stk1, North = stk2)
-  appendObservations <- function(stk, stk0, obsyrs, observations, args) {
-    append(append(stk0, window(stk, start = an(obsyrs)[length(obsyrs)] + 1)),
-           observations[, ac(seq(args$dy + 1, args$fy))])
-  }
-
-  observations$stk[[1]] <- appendObservations(stk[[1]], stk0[[1]], obsyrs, observations$stk[[1]], args)
-  observations$stk[[2]] <- appendObservations(stk[[2]], stk0[[2]], obsyrs, observations$stk[[2]], args)
-
-  # Update indices
-  # ... (process for updating indices)
-  
-  return(list(stk = window(observations$stk, start = datayrs[1], end = datayrs[length(datayrs)]),
-              idx = FLIndices(idx), observations = observations, tracking = tracking))
-}
-# }}}
-
-# cperfect.oem {{{
-
-#' Create a Perfect Observation Error Model
-#'
-#' This function creates a perfect observation error model for a stock assessment, 
-#' adjusting the stock data to match observations.
-#'
-#' @param stk Stock data.
-#' @param deviances Deviances for the model.
-#' @param observations Observations data.
-#' @param args Argument list.
-#' @param tracking Tracking information.
-#' @param biomass Boolean, if TRUE, use biomass instead of numbers.
-#' @param ... Additional arguments.
-#'
-#' @return A list with updated stock data, index, observations, and tracking.
-#' @export
-cperfect.oem <- function(stk, deviances, observations, args, tracking, biomass = FALSE, ...) {
-  # DIMENSIONS
-  y0 <- ac(args$y0)
-  dy <- ac(args$dy)
-
-  # GET perfect stock
-  stk <- window(stk, start=y0, end=dy, extend=FALSE)
-
-  # SIMPLIFY to match observations$stk
-  dio <- dim(observations$stk)
-  dis <- dim(stk)
-
-  if(!is.null(dio)) {
-    if(dio[3] > dis[3])
-      stk <- nounit(stk)
-    if(dio[4] > dis[4])
-      stk <- noseason(stk)
-  }
-
-  # SET perfect FLIndex per stock
-  if(isTRUE(biomass)) {
-    abu <- catch(stk) / fbar(stk)
-    idx <- FLIndices(A=FLIndexBiomass(index=abu %/% abu[,1],
-      sel.pattern=catch.sel(stk), index.q=expand(abu[,1],
-        year=dimnames(abu)$year, fill=TRUE),
-      effort=fbar(stk), range=c(startf=0, endf=0)))
-  } else {
-    idx <- FLIndices(A=FLIndex(index=stock.n(stk) * 0.01,
-      catch.n=areaSums(catch.n(stk)), catch.wt=stock.wt(stk),
-      sel.pattern=catch.sel(stk), index.q=stock.n(stk) %=% 1 / 0.01,
-      effort=fbar(stk), range=c(startf=0, endf=0)))
-  }
-
-  # STORE observations
-  observations$stk <- stk
-  observations$idx <- idx
-
-  list(stk=stk, idx=idx, observations=observations, tracking=tracking)
+  return(list(stk = res$stk, idx = res$idx,
+    observations = observations, tracking = res$tracking))
 }
 # }}}
 
@@ -219,9 +84,9 @@ jjms.sa <- function(stk, idx, args, tracking, ...) {
   sargs <- list(...)
   sargs$stock <- stk
   sargs$indices <- idx
+  sargs$dat <- attr(stk, "dat")
+  sargs$ctl <- attr(stk, "ctl")
   sargs$mp <- TRUE
-
-  sargs$lengthcomp_F3 <- attr(stk, "lengthcomp_F3")
 
   res <- do.call(jjms, sargs)
 
@@ -229,31 +94,6 @@ jjms.sa <- function(stk, idx, args, tracking, ...) {
   
   list(stk = res, tracking = tracking, args=list(
     dat=attr(res, "dat"), ctl=attr(res, "ctl")))
-
-} # }}}
-
-# perfcjm.sa {{{
-
-#' Perfect CJM Stock Assessment
-#'
-#' A placeholder function for perfect CJM stock assessment, potentially for testing or 
-#' method development purposes.
-#'
-#' @param stk Stock data.
-#' @param idx Index data.
-#' @param args Argument list.
-#' @param tracking Tracking information.
-#' @param ... Additional arguments.
-#'
-#' @return A list with stock data, tracking information, and arguments.
-#' @export
-perfcjm.sa <- function(stk, idx, args, tracking, ...) {
-
-  # ASSEMBLE args, names as for jjms()
-  sargs <- list(...)
-
-  list(stk = stk, tracking = tracking, args=list(
-    dat=sargs$dat, ctl=sargs$ctl))
 
 } # }}}
 
@@ -313,6 +153,7 @@ cjmfwc <- function(flqs, quant = "catch", nstocks = 1) {
 #' @return A list containing the updated fishery operation model object.
 #' @export
 fwdmov.om <- function(om, ctrl, FCB = FCB(ctrl), rates, time = 0, ...) {
+
   args <- list(...)
   yr <- unique(ctrl$year)
 
@@ -436,8 +277,9 @@ cjmage2len <- function(landings, selex, ess = 100, L_inf = 80.4, k = 0.16,
 #  S_a <- as.matrix(selex, drop = TRUE)
 
   # BUG:
-  N_at <- matrix(c(landings), nrow=12, ncol=1)
-  S_a <- matrix(c(selex), nrow=12, ncol=1)
+  nys <- dim(landings)[2]
+  N_at <- matrix(c(landings), nrow=12, ncol=nys)
+  S_a <- matrix(c(selex), nrow=12, ncol=nys)
 
   # Number of years
   tyears <- ncol(landings)
@@ -452,11 +294,12 @@ cjmage2len <- function(landings, selex, ess = 100, L_inf = 80.4, k = 0.16,
   lh <- list(highs = seq(10.5, 50.5), lows = seq(9.5, 49.5), L_a = L_a, CVlen = CVlen)
 
   # Convert age to length composition
-  lens <- AgeToLengthComp(lh, S_a, tyears, N_at, comp_sample, sample_type = "catch")
+  lens <- AgeToLengthComp(lh, S_a, tyears, N_at, comp_sample,
+    sample_type = "catch")
 
   # Extract and format the results
   res <- lens$LF
-  dimnames(res) <- list(year = dimnames(N_at)$year, len = lh$highs - 0.5)
+  dimnames(res) <- list(year = dimnames(landings)$year, len = lh$highs - 0.5)
 
   return(res)
 }

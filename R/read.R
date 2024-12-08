@@ -324,23 +324,6 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
   mod <- readJJM(name, path = file.path(path, "config"),
     input = file.path(path, "input"), output = file.path(path, "results"))
 
-  # GET No. stocks
-  nstks <- mod[[1]]$info$output$nStock
-
-  # BUILD observations
-  if(nstks == 1) {
-    stk <- propagate(buildFLSjjm(mod), iter=iter)
-    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
-    obs <- list(CJM=list(stk=stk, idx=idx))
-  } else if (nstks == 2) {
-    stk <- lapply(seq(2), function(i)
-      propagate(buildFLSojjm(mod, i), iter=iter))
-    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
-    Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
-    North <- list(stk=stk[[2]], idx=idx[c(5,6)])
-    obs <- list(Southern=Southern, North=North)
-  }
-
   # dat & ctl
   dat <- mod[[1]]$data
   ctl <- mod[[1]]$control
@@ -350,8 +333,26 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
     ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
   }
 
-  obs$dat <- dat
-  obs$ctl <- ctl
+  # GET No. stocks
+  nstks <- mod[[1]]$info$output$nStock
+
+  # BUILD observations
+  if(nstks == 1) {
+    stk <- propagate(buildFLSjjm(mod), iter=iter)
+    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
+    obs <- list(CJM=list(stk=stk, idx=idx))
+    obs$CJM$dat <- dat
+    obs$CJM$ctl <- ctl
+  } else if (nstks == 2) {
+    stk <- lapply(seq(2), function(i)
+      propagate(buildFLSojjm(mod, i), iter=iter))
+    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
+    Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
+    North <- list(stk=stk[[2]], idx=idx[c(5,6)])
+    obs <- list(Southern=Southern, North=North)
+    obs$dat <- dat
+    obs$ctl <- ctl
+  }
 
   return(FLoem(method=method, observations=obs, ...))
 
@@ -388,7 +389,18 @@ readRep <- function(file) {
     as.numeric(strsplit(trimws(x), " ")[[1]])))),
     dimnames = list(age=1:12, year = n[, 1]), units = "f")
 
-  return(FLQuants(stock.n=N, harvest=TotF))
+  # SB0
+  
+  ini <- grep("\\$msy_mt$", nms)
+  
+  msymt <- fil[seq(idx[ini] + 1, idx[ini + 1] - 1)]
+
+  msymt <- do.call(rbind, lapply(msymt, function(x)
+    as.numeric(strsplit(trimws(x), " ")[[1]])))
+
+  rps <- FLPar(SB0=msymt[1, 11])
+
+  return(list(stock.n=N, harvest=TotF, refpts=rps))
 
 } # }}}
 

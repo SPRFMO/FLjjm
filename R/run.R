@@ -10,47 +10,7 @@
 # └── runjjms
 #     └── exejjms
 #         │── calljjms
-#         └── packjjms
-
-# .combinejjmsout {{{
-
-#' Combine Fisheries Model Results
-#'
-#' Combines results from two sources of fisheries model runs, handling both single and 
-#' multiple stock scenarios. It combines data such as stock numbers, harvest, data, and control.
-#'
-#' @param x First set of fisheries model results.
-#' @param y Second set of fisheries model results.
-#'
-#' @return A combined list of fisheries model results.
-#' @export
-.combinejjmsout <- function(x, y) {
-  # Handle case where x$dat is a list with the first element named 'years'
-  if (!is.null(names(x$dat)[[1]]) && names(x$dat)[[1]] == "years") {
-    x$dat <- list(x$dat)
-    x$ctl <- list(x$ctl)
-  }
-
-  # Combine results for one or two stocks
-  if (length(x$stock.n) == 1) {
-    # Single stock scenario
-    return(list(
-      stock.n = combine(x$stock.n, y$stock.n),
-      harvest = combine(x$harvest, y$harvest),
-      dat = c(x$dat, list(y$dat)), 
-      ctl = c(x$ctl, list(y$ctl))
-    ))
-  } else {
-    # Multiple stocks scenario
-    return(list(
-      stock.n = combine(x[[1]], y[[1]]),
-      harvest = combine(x[[2]], y[[2]]),
-      dat = c(x$dat, list(y$dat)), 
-      ctl = c(x$ctl, list(y$ctl))
-    ))
-  }
-}
-# }}}
+#         └── packjjmsrun
 
 # jjms {{{
 
@@ -67,12 +27,11 @@
 #' @param path Path to save temporary files, defaults to a temporary file path.
 #' @param mp If TRUE, runs in parallel; otherwise, runs sequentially.
 #' @param clean If TRUE, cleans up temporary files after execution.
-#' @param lengthcomp_F3 Optional length composition data for F3.
 #'
 #' @return The updated FLStock or list of FLStocks after model execution.
 #' @export
-jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
-  clean = mp, lengthcomp_F3 = NULL) {
+jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
+  path = tempfile(), mp = FALSE, clean = mp) {
 
   # Determine the number of iterations
   its <- if(is(stock, "FLStock")) {
@@ -81,37 +40,39 @@ jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
     dims(stock[[1]])$iter 
   }
 
-  # MP runs using %dopar%
+  # GET no. of stocks
+  nstks <- ctl[[1]]$nStocks
+
+  # MP runs using %do%, parallel at mp() level
   if(mp) {
 
     out <- foreach(i=seq(its), .combine=.combinejjmsout,
-      .multicombine=FALSE) %dopar% {
+      .multicombine=FALSE) %do% {
       
-      # CREATE new dat & ctl
-      nctl <- buildjjmctl(iter(stock, i), iter(indices, i), dat[[i]], ctl[[i]])
-      ndat <- buildjjmdata(iter(stock, i), iter(indices, i), dat[[i]],
-        lengthcomp_F3=lengthcomp_F3[[i]])
-
       # CREATE jjm.output
-      mod <- list(mod=list(data=ndat, control=nctl,
+      mod <- list(mod=list(data=dat[[i]], control=ctl[[i]],
         info=list(data=list(version="2015MS")),
         parameters=list(), output=list()))
 
       names(mod) <- ctl[[i]]$modelName
       class(mod) <- "jjm.output"
-
+      
       # CALL jjms
-      run <- runjjms(mod, path=file.path(path, i), args="-nohess", verbose=FALSE)
+      run <- runjjms(mod, path=file.path(path, i), args="-nohess", 
+        verbose=FALSE)
 
       # ONE stock
-      if(nctl$nStocks == 1) {
-        res <- readRep(file.path(run, "results", paste0(ctl[[i]]$modelName, "_1_R.rep")))
+      if(nstks == 1) {
+        res <- readRep(file.path(run, "results",
+          paste0(ctl[[i]]$modelName, "_1_R.rep")))
       # TWO stocks
       } else {
         # LOAD from each rep file
         res <- list(
-          readRep(file.path(run, "results", paste0(ctl[[i]]$modelName, "_1_R.rep"))),
-          readRep(file.path(run, "results", paste0(ctl[[i]]$modelName, "_2_R.rep"))))
+          readRep(file.path(run, "results",
+            paste0(ctl[[i]]$modelName, "_1_R.rep"))),
+          readRep(file.path(run, "results",
+            paste0(ctl[[i]]$modelName, "_2_R.rep"))))
 
         # RESHAPE as stock.n, harvest FLQuants
         res <- list(
@@ -121,28 +82,31 @@ jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
 
       if(clean)
         unlink(file.path(path, i), recursive = TRUE, force = TRUE)
-      c(res, list(dat=ndat, ctl=nctl))
+
+      return(res)
     }
     
     # COMBINE & assign to stock
     if(length(stock) == 1) {
       stock.n(stock) <- out$stock.n
       harvest(stock) <- out$harvest
+
+      stock <- FLStockR(stock, refpts=res$refpts)
       
-      attr(stock, "dat") <- out$dat
-      attr(stock, "ctl") <- out$ctl
+    # or stocks
     } else {
       stock.n(stock[[1]]) <- out$stock.n[[1]]
       stock.n(stock[[2]]) <- out$stock.n[[2]]
       harvest(stock[[1]]) <- out$harvest[[1]]
       harvest(stock[[2]]) <- out$harvest[[2]]
       
-      attr(stock, "dat") <- out$dat
-      attr(stock, "ctl") <- out$ctl
+      message("run.R:103")
+      browser("")
     }
 
   # OM runs using for()
   } else {
+
     for(i in seq(its)) {
       # CREATE new dat & ctl
       nctl <- buildjjmctl(iter(stock, i), iter(indices, i), dat[[i]], ctl[[i]])
@@ -215,19 +179,21 @@ jjms <- function(stock, indices, dat, ctl, path = tempfile(), mp = FALSE,
 #'
 #' @return The path where the JJMS model was executed.
 #' @export
-runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE) {
+runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE,
+  clean = TRUE) {
 
   # Extract model name
   modnm <- mod[[1]]$control$modelName
 
   # Create directory for model files
-  dir.create(path, showWarnings = FALSE, recursive = TRUE)
+  dir.create(path, showWarnings = TRUE, recursive = TRUE)
 
   # Save model files to the directory
   writeJJM(mod, path = path)
 
   # Execute JJMS model
-  executedPath <- exejjms(modnm, path, args = args, verbose = verbose)
+  executedPath <- exejjms(modnm, path, args = args, verbose = verbose,
+    clean=clean)
 
   return(executedPath)
 }
@@ -293,13 +259,6 @@ exejjms <- function(name, path, args = "", verbose = TRUE, clean = TRUE) {
 
   # RETURN path
   invisible(path)
-}
-# }}}
-
-#getjjms {{{
-getjjms <- function(os=get_os()) {
-  return(list.files(system.file('bin', os, package="FLjjm"),
-    full.names=TRUE)[1])
 }
 # }}}
 
@@ -376,5 +335,45 @@ packjjmsrun <- function(path) {
 
   # Return TRUE if all files were successfully removed, FALSE otherwise
   invisible(all(removalResult))
+}
+# }}}
+
+#getjjms {{{
+getjjms <- function(os=get_os()) {
+  return(list.files(system.file('bin', os, package="FLjjm"),
+    full.names=TRUE)[1])
+}
+# }}}
+
+# .combinejjmsout {{{
+
+#' Combine Fisheries Model Results
+#'
+#' Combines results from two sources of fisheries model runs, handling both
+#' single and multiple stock scenarios. It combines data such as stock numbers,
+#' harvest, data, and control.
+#'
+#' @param x First set of fisheries model results.
+#' @param y Second set of fisheries model results.
+#'
+#' @return A combined list of fisheries model results.
+#' @export
+
+.combinejjmsout <- function(x, y) {
+  # Combine results for one or two stocks
+  if (length(x$stock.n) == 1) {
+    # Single stock scenario
+    return(list(
+      stock.n = combine(x$stock.n, y$stock.n),
+      harvest = combine(x$harvest, y$harvest),
+      refpts = combine(x$refpts, y$refpts)
+    ))
+  } else {
+    # Multiple stocks scenario
+    return(list(
+      stock.n = combine(x[[1]], y[[1]]),
+      harvest = combine(x[[2]], y[[2]]))
+    )
+  }
 }
 # }}}

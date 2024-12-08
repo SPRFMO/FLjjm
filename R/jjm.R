@@ -65,8 +65,9 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
     lana <- landings.n(stk)
     lanw <- landings.wt(stk)
 
-  } else
+  } else {
     stop("buildjjmdata requires an 'FLStock' or 'FLStocks' as 'stk'.")
+  }
   
   # ARE there any new years? 
   if(data$years[2] < maxy) {
@@ -122,9 +123,6 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
   names(dimnames(laa)) <- names(dimnames(res$Fagecomp))
   dimnames(laa)[3] <- dimnames(res$Fagecomp)[3]
 
-  # BUG: NOTE 1 year delay fleet 4
-  # laa[dim(laa)[1], , 4] <- NA
-  
   # UPDATE Flengthcomp
   if(!is.null(newys)) {
     dm <- dim(data$Flengthcomp)
@@ -143,7 +141,7 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
     # ADD new data for F3
     if(!is.null(lengthcomp_F3)) {
       if(length(newys) > 2)
-      len[ac(newys), ,3] <- lengthcomp_F3[ac(newys),]
+        len[ac(newys), ,3] <- lengthcomp_F3[ac(newys),]
     }
 
     res$Flengthcomp <- len
@@ -154,7 +152,13 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
 
   # DROP F3 agecomp
   laa[,,3] <- NA
-  res$Fagecomp <- laa
+
+  # ADD landings as Fagecomp for newys
+  # TODO: CHANGE past for hindcasting
+  if(!is.null(newys)) {
+    laa[dimnames(res$Fagecomp)$years,,] <- res$Fagecomp
+    res$Fagecomp <- laa
+  }
 
   # UPDATE or SUBSTITUTE Fageyears
   res$Fageyears <- arryears(res$Fagecomp)
@@ -185,7 +189,8 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
   # UPDATE Index [FLQs - model.frame - matrix]
   index <- as.matrix(model.frame(lapply(idx,
     function(x) window(index(x), start=miny, end=maxy)), drop=TRUE)[,-1])
-  dimnames(index) <- list(years=seq(miny, maxy), paste0("index", seq(length(idx))))
+  dimnames(index) <- list(years=seq(miny, maxy),
+    paste0("index", seq(length(idx))))
   
   res$Index <- index
 
