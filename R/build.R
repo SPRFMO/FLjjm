@@ -193,14 +193,26 @@ buildFLFsjjm <- function(out, stock=1) {
       dimnames=list(age=1:12, year=outp[[paste0("wt_fsh_", i)]][,1]), 
       units="kg")
     # catch.sel: outp$sel_fhs_#
-    # BUG: sel + catch.q
     csel <- FLQuant(t(outp[[paste0("sel_fsh_", i)]][,-c(1, 2)]),
       dimnames=list(age=1:12, year=outp[[paste0("sel_fsh_", i)]][,2]), units="")
+ 
+    # effort = Faa / Saa
+    eff <- quantMeans(FLQuant(t(outp[[paste0("F_age_", i)]][,-1]),
+      dimnames=list(age=1:12, year=outp[[paste0("F_age_", i)]][,1]),
+      units="") / csel)
+
+    # catch.q
+    cqa <- rbind(FLPar(c(apply(csel, 2, max)), dimnames=list(params=c('alpha'), 
+      year=dimnames(csel)$year, iter=i)),
+      FLPar(0, dimnames=list(params=c('beta'),
+      year=dimnames(csel)$year, iter=i)))
+
     # RESCALE catch.sel
     csel <- csel %/% apply(csel, 2, max)
 
+    # FLCatch
     flc <- FLCatch(name="CJM", landings.n=lan, landings.wt=lawt,
-      catch.sel=csel)
+      catch.sel=csel, catch.q=cqa)
 
     # discards = 0
     discards.n(flc) <- 0
@@ -208,11 +220,6 @@ buildFLFsjjm <- function(out, stock=1) {
     discards.wt(flc) <- landings.wt(flc)
 
     # FLFishery
-    
-    # effort = Faa / Saa
-    eff <- quantMeans(FLQuant(t(outp[[paste0("F_age_", i)]][,-1]),
-      dimnames=list(age=1:12, year=outp[[paste0("F_age_", i)]][,1]),
-      units="") / csel)
     
     # capacity
 

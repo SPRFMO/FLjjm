@@ -358,7 +358,7 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
 
 } # }}}
 
-# readRep (FLQuants stock.n, harvest) {{{
+# readRep (stock.n, harvest, refpts) {{{
 
 readRep <- function(file) {
 

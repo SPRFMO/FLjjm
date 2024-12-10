@@ -57,6 +57,8 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
       names(mod) <- ctl[[i]]$modelName
       class(mod) <- "jjm.output"
       
+      cat(".")
+
       # CALL jjms
       run <- runjjms(mod, path=file.path(path, i), args="-nohess", 
         verbose=FALSE)
