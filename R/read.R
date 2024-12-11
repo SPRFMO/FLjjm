@@ -319,19 +319,20 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
 #'   path=system.file("ext-data", "two_stock", package="FLjjm"))
 #' oemtwo
 
-readFLoemjjm <- function(name, path, method=cjm.oem, iter=1, ...) {
+readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
 
   mod <- readJJM(name, path = file.path(path, "config"),
     input = file.path(path, "input"), output = file.path(path, "results"))
+
+  if(is.null(iter))
+    iter <- 1
 
   # dat & ctl
   dat <- mod[[1]]$data
   ctl <- mod[[1]]$control
 
-  if(iter > 1) {
-    dat <- setNames(rep(list(dat), iter), nm=seq(iter))
-    ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
-  }
+  dat <- setNames(rep(list(dat), iter), nm=seq(iter))
+  ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
 
   # GET No. stocks
   nstks <- mod[[1]]$info$output$nStock

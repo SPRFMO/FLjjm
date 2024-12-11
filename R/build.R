@@ -148,6 +148,7 @@ buildFLBsjjm <- function(out) {
 #     |-- catch.sel: output$sel_fsh_
 #     `-- price: NA
 
+
 #' Build FLFisheries from JJMS Model Output
 #'
 #' Constructs an `FLFisheries` object from a JJMS model output, processing data for 
@@ -558,6 +559,7 @@ buildFLSjjm <- function(out, stock=1, name="CJM") {
   # EXTRACT
   info <- out$info
   data <- out$data
+  outp <- out$output[[stock]]
   control <- out$control
 
   # SET dimnames
@@ -596,13 +598,16 @@ buildFLSjjm <- function(out, stock=1, name="CJM") {
   # areas
   res <- setNames(nm=fis)
 
-  # landings.n: data$Fagecomp
-  landings.n <- FLQuant(c(aperm(data$Fagecomp[,,idx, drop=FALSE], c(2,1,3))),
-    dimnames=c(dmns, list(area=fis)), units="1e6")
+  # landings.n: output$C_fsh
+  landings.n <- abind(lapply(seq(fis), function(i) 
+    FLQuant(t(outp[[paste0("C_fsh_", i)]][,-1]), dimnames=list(age=1:12,
+      year=outp[[paste0("C_fsh_", i)]][,1]), units="1e6")))
 
-  # landings.wt: data$Fwtatage
-  landings.wt <- FLQuant(c(aperm(data$Fwtatage[,,idx, drop=FALSE], c(2,1,3))),
-    dimnames=c(dmns, list(area=fis)), units="kg")
+  # landings.wt: output$wt_fsh
+  landings.wt <- abind(lapply(seq(fis), function(i) 
+  FLQuant(t(outp[[paste0("wt_fsh_", i)]][,-1]),
+    dimnames=list(age=1:12, year=outp[[paste0("wt_fsh_", i)]][,1]), 
+    units="kg")))
 
   discards.n <- landings.n %=% 0
   discards.wt <- landings.wt
