@@ -60,7 +60,7 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
       cat(".")
 
       # CALL jjms
-      run <- runjjms(mod, path=file.path(path, i), args="-nohess", 
+      run <- runjjms(mod, path=file.path(path, dims(stock)$maxyear, i), args="-nohess", 
         verbose=FALSE)
 
       # ONE stock
@@ -83,7 +83,7 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
       }
 
       if(clean)
-        unlink(file.path(path, i), recursive = TRUE, force = TRUE)
+        unlink(run, recursive = TRUE, force = TRUE)
 
       return(res)
     }

@@ -88,12 +88,14 @@ jjms.sa <- function(stk, idx, args, tracking, ...) {
   sargs$ctl <- attr(stk, "ctl")
   sargs$mp <- TRUE
 
+  # CALL jjms
   res <- do.call(jjms, sargs)
 
-  track(tracking, "conv.est") <- 1
+  # SET convergence  if run
+  track(tracking, "conv.est", args$ay) <- 1
   
-  list(stk = res, tracking = tracking, args=list(
-    dat=attr(res, "dat"), ctl=attr(res, "ctl")))
+  list(stk = res, tracking = tracking, args=list(dat=attr(res, "dat"),
+    ctl=attr(res, "ctl")))
 
 } # }}}
 

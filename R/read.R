@@ -489,7 +489,10 @@ readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
   ffishs <- FLQuants(lapply(split(ffish, by="unit"), function(x)
     as.FLQuant(x[, list(iter, year, age, data)], units="f")))
 
+  # EXTRACT LOO lkhds
+  lookhd <- tab[grepl("LOO", name), .(name, iter, unit, year, data)]
+
   return(list(refpts=refpts, n=nqs, deviances=deqs, catch.sel=selqs,
-    landings.n=caaqs, index.sel=iselqs, partfs=ffishs))
+    landings.n=caaqs, index.sel=iselqs, partfs=ffishs, lookhd=lookhd))
 }
 # }}}

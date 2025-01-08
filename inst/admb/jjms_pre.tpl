@@ -1632,23 +1632,16 @@ PARAMETER_SECTION
   number sigma
   matrix rec_like(1,nstk,1,4)
   vector catch_like(1,nfsh)
-  matrix catch_like_loo(1,nfsh,styr,endyr)
   vector age_like_fsh(1,nfsh)
-  matrix age_like_fsh_loo(1,nfsh,1,nyrs_fsh_age)
-
 //---------------------------------NEW
   vector length_like_fsh(1,nfsh)
-  matrix length_like_fsh_loo(1,nfsh,1,nyrs_fsh_length)
   vector length_like_ind(1,nind)
-  matrix length_like_ind_loo(1,nind,1,nyrs_ind_length)
 //---------------------------------NEW
 
   vector age_like_ind(1,nind)
-  matrix age_like_ind_loo(1,nind,1,nyrs_ind_age)
   matrix sel_like_fsh(1,nfsh,1,4)       
   matrix sel_like_ind(1,nind,1,4)       
   vector ind_like(1,nind)
-  matrix ind_like_loo(1,nind,1,nyrs_ind)
   vector fpen(1,6)    
   matrix post_priors(1,npar,1,8)
   vector post_priors_indq(1,nind)
@@ -1960,7 +1953,6 @@ FUNCTION write_mceval
     mceval<< mc_count<<" FMSY   "<<k<<" all "<<" all "<<Fmsy(k)<<  endl;
     mceval<< mc_count<<" R0   "<<k<<" all "<<" all "<<Rzero(k)<<  endl;
     mceval<< mc_count<<" B0   "<<k<<" all "<<" all "<<Bzero(k)<<  endl;
-    mceval<< mc_count<<" H   "<<k<<" all "<<" all "<<steepness(k)<<  endl;
     for (i=styr;i<=endyr;i++) {
       // SSB & rec
       mceval<< mc_count<<" SSB      "<<k<<" "<<i<<" all "<<Sp_Biom(k,i)<<  endl;
@@ -2004,26 +1996,6 @@ FUNCTION write_mceval
       }
     }
   }
-  // LOO-IC stuff
-  // 1. catch likelihood output
-  for(k=1;k<=nfsh;k++) 
-    for(i=styr;i<=endyr;i++) mceval<<mc_count<<" Catch_lkhd_LOO "<<k<<" "<<i<<" 0 "<<catch_like_loo(k,i)<< endl;
-  // 2. age likelihood
-  for(k=1;k<=nfsh;k++) 
-    for(i=1;i<=nyrs_fsh_age(k);i++) mceval<<mc_count<<" Age_lkhd_LOO "<<k<<" "<<i<<" 0 "<<age_like_fsh_loo(k,i)<< endl; 
-  // 3. length likelihood
-  for(k=1;k<=nfsh;k++) 
-    for(i=1;i<=nyrs_fsh_length(k);i++) mceval<<mc_count<<" Length_lkhd_LOO "<<k<<" "<<i<<" 0 "<<length_like_fsh_loo(k,i)<< endl; 
-  // 4. length likelihood for index fisheries
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind_length(k);i++) mceval<<mc_count<<" Length_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<length_like_ind_loo(k,i)<< endl;
-  // 5. age likelihood for index fisheries
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind_age(k);i++) mceval<<mc_count<<" Age_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<age_like_ind_loo(k,i)<< endl; 
-  // 6. abundance index likelihood
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind(k);i++) mceval<<mc_count<<" Abundance_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<ind_like_loo(k,i)<< endl; 
-  
   /*
 	mceval<<"N_stock"<<endl;
 	mceval<<natage << endl;
@@ -2924,13 +2896,8 @@ FUNCTION Cat_Like
   if (current_phase()>3)
   {
     for (k=1;k<=nfsh;k++)
-      for (i=styr;i<=endyr;i++) {
-        
-        catch_like_loo(k,i) = -.5*square(log(catch_bio(k,i)+.0001) - log(pred_catch(k,i)+.0001) )/catch_bio_lva(k,i); 
-        catch_like(k) -= catch_like_loo(k,i);
-
-        }
-   
+      for (i=styr;i<=endyr;i++)
+         catch_like(k) += .5*square(log(catch_bio(k,i)+.0001) - log(pred_catch(k,i)+.0001) )/catch_bio_lva(k,i);
   }
   else
   {
@@ -3214,10 +3181,8 @@ FUNCTION Srv_Like
     for (i=1;i<=nyrs_ind(k);i++)
     {
       // iyr = int(yrs_ind(k,i));
-      ind_like_loo(k,i) = -square(log(obs_ind(k,i)) - log(pred_ind(k,i)) ) / 
+      ind_like(k) += square(log(obs_ind(k,i)) - log(pred_ind(k,i)) ) / 
                                    (2.*obs_lse_ind(k,i)*obs_lse_ind(k,i));
-      ind_like(k) -= ind_like_loo(k,i);
-
     }
   /* normal distribution option to add someday...
     for (i=1;i<=nyrs_ind(k);i++)
@@ -3226,45 +3191,27 @@ FUNCTION Srv_Like
   */
 FUNCTION Age_Like
   age_like_fsh.initialize();
-  for (k=1;k<=nfsh;k++) {
-    for (int i=1;i<=nyrs_fsh_age(k);i++) {
-      age_like_fsh_loo(k,i) = n_sample_fsh_age(k,i)*(oac_fsh(k,i) + 0.001) * log(eac_fsh(k,i) + 0.001 ) ;
-      age_like_fsh(k) -= age_like_fsh_loo(k,i);
-      }
-  }
+  for (k=1;k<=nfsh;k++)
+    for (int i=1;i<=nyrs_fsh_age(k);i++)
+      age_like_fsh(k) -= n_sample_fsh_age(k,i)*(oac_fsh(k,i) + 0.001) * log(eac_fsh(k,i) + 0.001 ) ;
   age_like_fsh -= offset_fsh;
 //-----------------------------------NEW-----------------------
   length_like_fsh.initialize();
-  for (k=1;k<=nfsh;k++) {
-    for (int i=1;i<=nyrs_fsh_length(k);i++) {
-
-      length_like_fsh_loo(k,i) = n_sample_fsh_length(k,i)*(olc_fsh(k,i) + 0.001) * log(elc_fsh(k,i) + 0.001 ) ; 
-      length_like_fsh(k) -= length_like_fsh_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nfsh;k++)
+    for (int i=1;i<=nyrs_fsh_length(k);i++)
+      length_like_fsh(k) -= n_sample_fsh_length(k,i)*(olc_fsh(k,i) + 0.001) * log(elc_fsh(k,i) + 0.001 ) ;
   length_like_fsh -= offset_lfsh;
 //----------------------------------------------------------
   length_like_ind.initialize();
-  for (k=1;k<=nind;k++) {
-    for (int i=1;i<=nyrs_ind_length(k);i++) {
-
-      length_like_ind_loo(k,i) = n_sample_ind_length(k,i)*(olc_ind(k,i) + 0.001) * log(elc_ind(k,i) + 0.001 ) ;
-      length_like_ind(k) -= length_like_ind_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nind;k++)
+    for (int i=1;i<=nyrs_ind_length(k);i++)
+      length_like_ind(k) -= n_sample_ind_length(k,i)*(olc_ind(k,i) + 0.001) * log(elc_ind(k,i) + 0.001 ) ;
   length_like_ind -= offset_lind;
 //----------------------------------------------------------
   age_like_ind.initialize();
-  for (k=1;k<=nind;k++) {
-    for (int i=1;i<=nyrs_ind_age(k);i++) { 
-
-      age_like_ind_loo(k,i) = n_sample_ind_age(k,i)*(oac_ind(k,i)(mina(k),nages) + 0.001) * log(eac_ind(k,i)(mina(k),nages) + 0.001 ) ;
-      age_like_ind(k) -= age_like_ind_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nind;k++)
+    for (int i=1;i<=nyrs_ind_age(k);i++)
+      age_like_ind(k) -= n_sample_ind_age(k,i)*(oac_ind(k,i)(mina(k),nages) + 0.001) * log(eac_ind(k,i)(mina(k),nages) + 0.001 ) ;
   age_like_ind -= offset_ind;
 
 FUNCTION Oper_Model
