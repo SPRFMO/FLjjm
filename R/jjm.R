@@ -218,7 +218,6 @@ buildjjmdata <- function(stk, idx, data, lengthcomp_F3=NULL, ...) {
   res$Indexerr <- inder
 
   # -- AGE
-  
   # UPDATE Ipropage [FLQs - array]
   prop <- Reduce(abind, lapply(idx, function(x)
     window(catch.n(x), start=miny, end=maxy)))
