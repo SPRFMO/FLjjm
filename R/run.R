@@ -103,7 +103,7 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
       harvest(stock[[2]]) <- out$harvest[[2]]
       
       message("run.R:103")
-      browser("")
+      browser()
     }
 
   # OM runs using for()
@@ -177,7 +177,7 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
 #' @param mod The JJMS model data to be executed.
 #' @param path The path to save model files and run the JJMS model, defaults to a temporary file path.
 #' @param args Additional arguments for the JJMS model execution.
-#' @param verbose If TRUE, execution details are printed; otherwise, they are suppressed.
+#' @param verbose if TRUE, execution details are printed; otherwise, they are suppressed.
 #'
 #' @return The path where the JJMS model was executed.
 #' @export
@@ -186,6 +186,9 @@ runjjms <- function(mod, path = tempfile(), args = "", verbose = TRUE,
 
   # Extract model name
   modnm <- mod[[1]]$control$modelName
+
+  # DELETE path
+  unlink(path, recursive=TRUE, force=TRUE)
 
   # Create directory for model files
   dir.create(path, showWarnings = TRUE, recursive = TRUE)
