@@ -259,6 +259,7 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
   if(!is.null(iter)) {
     outmc <- readMCeval(path, iters=iter)
  
+    # biols
     for(i in seq(nstks)) {
     
       # refpts
@@ -270,12 +271,15 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
       # deviances
       deviances(om@biols[[i]]) <- outmc$deviances[[i]]
 
-      # selex
     }
+ 
+    # fisheries
     for(i in seq(4)) {
       # ASSIGN selex
       om@fisheries[[i]][[1]]@catch.sel <- outmc$catch.sel[[i]] %/%
         apply(outmc$catch.sel[[i]], 2, max)
+      # ASSIGN selex
+      om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
       # CALCULATE effort
       effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /
         outmc$catch.sel[[i]])
@@ -469,7 +473,7 @@ readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
   caas <- tab[name == "C_fsh", .(iter, unit, year, age, data)]
 
   caaqs <- FLQuants(lapply(split(caas, by="unit"), function(x)
-    as.FLQuant(x[, .(iter, year, age, data)], units="1000 t")))
+    as.FLQuant(x[, .(iter, year, age, data)], units="1e6")))
 
   # EXTRACT catch.sel
   sels <- tab[name == "Sel_fsh", .(iter, unit, year, age, data)]

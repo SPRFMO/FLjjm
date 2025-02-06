@@ -10,7 +10,7 @@
 # cjm.oem {{{
 
 cjm.oem <- function(stk, deviances, observations, stability=1,
-  wts=TRUE, F3sel, args, tracking) {
+  wts=TRUE, jjms=TRUE, F3sel, args, tracking) {
 
   # SET dimension args
   spread(args)
@@ -20,42 +20,50 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
   res <- sampling.oem(stk=stk, deviances=deviances,
     observations=observations, args=args, tracking=tracking)
 
+  #
+  nidx <- names(observations$idx)
+
   # DROP 2022 from idx[[2]]
-  res$idx[[2]] <- res$idx[[2]][, -39]
+  if("Chile_AcousN" %in% nidx)
+    res$idx[[2]] <- res$idx[[2]][, -39]
 
   # UPDATE idx: 2, 3, 6, 7
-  for(i in c(2,3,6,7))
+  for(i in nidx[nidx %in% c("Chile_AcousN", "Chile_CPUE", "Peru_CPUE", "Offshore_CPUE")])
     observations$idx[[i]][, dyrs] <- res$idx[[i]][, dyrs]
 
   # DROP last year from idx[[7]]
-  res$idx[[7]] <- window(res$idx[[7]], end=dy-1)
+  if("Offshore_CPUE" %in% nidx)
+    res$idx[["Offshore_CPUE"]] <- window(res$idx[["Offshore_CPUE"]], end=dy-1)
 
-  # Add F3 length samples
-  f3lengths <- lapply(seq(it), function(j) {
-    cjmage2len(iter(landings.n(res$stk)[,,,,3][, dyrs], j),
-               iter(expand(F3sel, year = dyrs), j))
-  })
+  if(jjms) {
 
-  # CREATE dat & ctl
-  dat <- observations$dat
-  ctl <- observations$ctl
+    # Add F3 length samples
+    f3lengths <- lapply(seq(it), function(j) {
+      cjmage2len(iter(landings.n(res$stk)[,,,,3][, dyrs], j),
+        iter(expand(F3sel, year = dyrs), j))
+    })
 
-  for(i in seq(it)) {
-    ctl[[i]] <- buildjjmctl(iter(res$stk, i), iter(res$idx, i), dat[[i]],
-      ctl[[i]])
-    dat[[i]] <- buildjjmdata(iter(res$stk, i), iter(res$idx, i), dat[[i]],
-      lengthcomp_F3=f3lengths[[i]])
+    # CREATE dat & ctl
+    dat <- observations$dat
+    ctl <- observations$ctl
+
+    for(i in seq(it)) {
+      ctl[[i]] <- buildjjmctl(iter(res$stk, i), iter(res$idx, i), dat[[i]],
+        ctl[[i]])
+      dat[[i]] <- buildjjmdata(iter(res$stk, i), iter(res$idx, i), dat[[i]],
+        lengthcomp_F3=f3lengths[[i]])
+    }
+
+    # STORE new observations in observations
+    observations$stk[, dyrs] <- res$stk[, dyrs]
+
+    # KEEP new dat & ctl
+    observations[c('dat', 'ctl')]  <- list(dat, ctl)
+
+    # ATTACH to stk
+    attr(res$stk, "ctl") <- ctl
+    attr(res$stk, "dat") <- dat
   }
-
-  # STORE new observations in observations
-  observations$stk[, dyrs] <- res$stk[, dyrs]
-
-  # KEEP new dat & ctl
-  observations[c('dat', 'ctl')]  <- list(dat, ctl)
-
-  # ATTACH to stk
-  attr(res$stk, "ctl") <- ctl
-  attr(res$stk, "dat") <- dat
 
   return(list(stk = res$stk, idx = res$idx,
     observations = observations, tracking = res$tracking))
