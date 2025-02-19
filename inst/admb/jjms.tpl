@@ -1972,7 +1972,7 @@ FUNCTION write_mceval
     mceval<< mc_count<<" SBMSYy  "<<k<<" "<<i<<" all "<<Bmsy(k)<<  endl;
       for (j=1;j<=nages;j++) 
       {
-        // catage, natage
+        // natage
         mceval<< mc_count<<" N_stock "<<k<<" "<<i<<" "<<j<<" "<<natage(k,i,j)<<  endl; 
       }
     }
@@ -1995,12 +1995,22 @@ FUNCTION write_mceval
   // BY index
   for(int k=1;k<=nind;k++)
   {
+    for (i=1;i<=nyrs_ind(k);i++)
+    {
+      mceval<< mc_count<<" Q_ind "<<k<<" "<<yrs_ind(k,i)<<" "<< "all" <<" "<<q_ind(k,i)<<  endl;
+      mceval<< mc_count<<" Pred_ind "<<k<<" "<<yrs_ind(k,i)<<" "<< "all" <<" "<<pred_ind(k,i)<<  endl;
+  }
+    // Pred prop age ind
+    for (i=1;i<=nyrs_ind_age(k);i++) 
+      for (j=1;j<=nages;j++) 
+      mceval<< mc_count<<" Pred_prop_ind "<<k<<" "<<i<<" "<<j<<" "<<eac_ind(k,i,j)<<  endl;
+
     for (i=styr;i<=endyr;i++)
     {
       for (j=1;j<=nages;j++) 
       {
-        // SELEX I
-        mceval<< mc_count<<" Sel_ind "<<k<<" "<<i<<" "<<j<<" "<<sel_ind(k,i,j)<<  endl; 
+      // SELEX I
+      mceval<< mc_count<<" Sel_ind "<<k<<" "<<i<<" "<<j<<" "<<sel_ind(k,i,j)<<  endl;
       }
     }
   }

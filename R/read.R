@@ -1,4 +1,4 @@
-# read.R - CONSTRUCT FLR objects from files in a path containing jjms output
+# read.R - CONzMRUCT FLR objects from files in a path containing jjms output
 # FLjjm/R/read.R
 
 # Copyright WMR, 2020
@@ -270,21 +270,29 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
 
       # deviances
       deviances(om@biols[[i]]) <- outmc$deviances[[i]]
-
     }
  
     # fisheries
     for(i in seq(4)) {
-      # ASSIGN selex
-      om@fisheries[[i]][[1]]@catch.sel <- outmc$catch.sel[[i]] %/%
-        apply(outmc$catch.sel[[i]], 2, max)
-      # ASSIGN selex
-      om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
-      # CALCULATE effort
-      effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /
-        outmc$catch.sel[[i]])
-    }
 
+      # PROPAGATE
+      om@fisheries[[i]] <- propagate(om@fisheries[[i]], 500)
+      
+      # ASSIGN catch.q
+      om@fisheries[[i]][[1]]@catch.q['alpha',] <-
+        apply(outmc$catch.sel[[i]], 2:6, max)
+
+      # ASSIGN rescaled selex
+      om@fisheries[[i]][[1]]@catch.sel <- outmc$catch.sel[[i]] %/% 
+        apply(outmc$catch.sel[[i]], 2:6, max)
+
+      # ASSIGN catch.n
+      om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
+      
+      # CALCULATE effort  = sum(F / sel)
+      effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /
+        (outmc$catch.sel[[i]]) %/% apply(outmc$catch.sel[[i]], 2:6, max))
+    }
     om <- propagate(om, iter)
   }
 
@@ -341,22 +349,30 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
   # GET No. stocks
   nstks <- mod[[1]]$info$output$nStock
 
+  # BUILD idx observations
+  idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
+
+  # McMC
+  if(iter > 1) {
+    outmc <- readMCeval(path, iters=iter)
+    for(i in seq(idx)) {
+      index.q(idx[[i]]) <- outmc$index.q[[i]]
+      sel.pattern(idx[[i]]) <- outmc$index.sel[[i]][, dimnames(idx[[i]])$year]
+    }
+  }
+
   # BUILD observations
   if(nstks == 1) {
+
     stk <- propagate(buildFLSjjm(mod), iter=iter)
-    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
-    obs <- list(CJM=list(stk=stk, idx=idx))
-    obs$CJM$dat <- dat
-    obs$CJM$ctl <- ctl
+    obs <- list(CJM=list(stk=stk, idx=idx, dat=dat, ctl=ctl))
+
   } else if (nstks == 2) {
     stk <- lapply(seq(2), function(i)
       propagate(buildFLSojjm(mod, i), iter=iter))
-    idx <- lapply(buildFLIsjjm(mod), propagate, iter=iter)
     Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
     North <- list(stk=stk[[2]], idx=idx[c(5,6)])
-    obs <- list(Southern=Southern, North=North)
-    obs$dat <- dat
-    obs$ctl <- ctl
+    obs <- list(Southern=Southern, North=North, dat=dat, ctl=ctl)
   }
 
   return(FLoem(method=method, observations=obs, ...))
@@ -487,6 +503,18 @@ readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
   iselqs <- FLQuants(lapply(split(isels, by="unit"), function(x)
     as.FLQuant(x[, list(iter, year, age, data)], units="")))
 
+  # EXTRACT index.q 
+  qs <- tab[name == "Q_ind", .(iter, unit, year, age, data)]
+
+  qqs <- FLQuants(lapply(split(qs, by="unit"), function(x)
+    as.FLQuant(x[, list(iter, year, age, data)], units="")))
+
+  # EXTRACT pred ind
+  pids <- tab[name == "Pred_ind", .(iter, unit, year, age, data)]
+
+  pidqs <- FLQuants(lapply(split(pids, by="unit"), function(x)
+    as.FLQuant(x[, list(iter, year, age, data)], units="")))
+
   # EXTRACT F by fishery
   ffish <- tab[name == "F_faa", .(iter, unit, year, age, data)]
  
@@ -497,6 +525,7 @@ readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
   lookhd <- tab[grepl("LOO", name), .(name, iter, unit, year, data)]
 
   return(list(refpts=refpts, n=nqs, deviances=deqs, catch.sel=selqs,
-    landings.n=caaqs, index.sel=iselqs, partfs=ffishs, lookhd=lookhd))
+    landings.n=caaqs, index.sel=iselqs, index.q=qqs, index.hat=pidqs,
+    partfs=ffishs, lookhd=lookhd))
 }
 # }}}

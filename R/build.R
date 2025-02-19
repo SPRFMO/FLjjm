@@ -189,27 +189,30 @@ buildFLFsjjm <- function(out, stock=1) {
     lan <- FLQuant(t(outp[[paste0("C_fsh_", i)]][,-1]),
       dimnames=list(age=1:12, year=outp[[paste0("C_fsh_", i)]][,1]), 
       units="1e6")
+
     # landings.wt: outp$wt_fsh_#
     lawt <- FLQuant(t(outp[[paste0("wt_fsh_", i)]][,-1]),
       dimnames=list(age=1:12, year=outp[[paste0("wt_fsh_", i)]][,1]), 
       units="kg")
+    
     # catch.sel: outp$sel_fhs_#
     csel <- FLQuant(t(outp[[paste0("sel_fsh_", i)]][,-c(1, 2)]),
       dimnames=list(age=1:12, year=outp[[paste0("sel_fsh_", i)]][,2]), units="")
- 
-    # effort = Faa / Saa
-    eff <- quantMeans(FLQuant(t(outp[[paste0("F_age_", i)]][,-1]),
-      dimnames=list(age=1:12, year=outp[[paste0("F_age_", i)]][,1]),
-      units="") / csel)
-
+    
     # catch.q
     cqa <- rbind(FLPar(c(apply(csel, 2, max)), dimnames=list(params=c('alpha'), 
       year=dimnames(csel)$year, iter=i)),
       FLPar(0, dimnames=list(params=c('beta'),
       year=dimnames(csel)$year, iter=i)))
 
-    # RESCALE catch.sel
+    # RESCALE catch.sel to 1
     csel <- csel %/% apply(csel, 2, max)
+
+    # effort = Faa / Saa
+    # TODO: CHECK McMC
+    eff <- quantMeans(FLQuant(t(outp[[paste0("F_age_", i)]][,-1]),
+      dimnames=list(age=1:12, year=outp[[paste0("F_age_", i)]][,1]),
+      units="") / csel)
 
     # FLCatch
     flc <- FLCatch(name="CJM", landings.n=lan, landings.wt=lawt,
@@ -339,7 +342,6 @@ buildFLIsjjm <- function(out) {
     })
   }
   names(idxsp) <- nms
-
 
   # GET output$q_* - @index.q
   if(info$output$nStock == 2) {
