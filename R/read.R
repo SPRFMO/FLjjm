@@ -287,11 +287,11 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
         apply(outmc$catch.sel[[i]], 2:6, max)
 
       # ASSIGN catch.n
-      om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
+  #    om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
       
       # CALCULATE effort  = sum(F / sel)
       effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /
-        (outmc$catch.sel[[i]]) %/% apply(outmc$catch.sel[[i]], 2:6, max))
+        (outmc$catch.sel[[i]]))
     }
     om <- propagate(om, iter)
   }
