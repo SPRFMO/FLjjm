@@ -1,6 +1,6 @@
 Package: FLjjm
 Title: Running the JJM Stock Assessment Model Inside the MSE FLR System
-Version: 0.2.0.9013
+Version: 0.2.0.9014
 AuthorR: c(
   person(given = 'Iago', family = 'Mosqueira', role = c('aut', 'cre'),
     email = 'iago.mosqueira@wur.nl'),

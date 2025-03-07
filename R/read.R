@@ -437,7 +437,8 @@ readMod <- function(name, path) {
 
 # readMCeval {{{
 
-readMCeval <- function(path, file="mceval.rep", iters=max(tab$iter)) {
+readMCeval <- function(path, file=list.files(path, pattern='mceval*')[1], 
+  iters=max(tab$iter)) {
 
   # LOAD file
   tab <- fread(file.path(path, file), verbose=FALSE,
