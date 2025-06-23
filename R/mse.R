@@ -209,7 +209,7 @@ fwdmov.om <- function(om, ctrl, FCB = FCB(ctrl), rates, time = 0, ...) {
   args$control <- ctrl
   om <- do.call("fwd", args)
 
-  return(list(object = om))
+  return(list(om = om))
 }
 # }}}
 
