@@ -268,6 +268,10 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
       # N
       om@biols[[i]]@n <- outmc$n[[i]]
 
+      # params
+      om@biols[[i]]@rec@params <- FLPar(s=om@biols[[i]]@rec@params$s,
+        R0=om@refpts[[i]]$R0, v=om@refpts[[i]]$SB0)
+
       # deviances
       deviances(om@biols[[i]]) <- outmc$deviances[[i]]
     }
@@ -276,7 +280,7 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
     for(i in seq(4)) {
 
       # PROPAGATE
-      om@fisheries[[i]] <- propagate(om@fisheries[[i]], 500)
+      om@fisheries[[i]] <- propagate(om@fisheries[[i]], iter)
       
       # ASSIGN catch.q
       om@fisheries[[i]][[1]]@catch.q['alpha',] <-
@@ -287,7 +291,7 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
         apply(outmc$catch.sel[[i]], 2:6, max)
 
       # ASSIGN catch.n
-  #    om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
+      # om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
       
       # CALCULATE effort  = sum(F / sel)
       effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /

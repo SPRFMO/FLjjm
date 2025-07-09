@@ -1,7 +1,7 @@
 # FLjjm
 
-- Version: 0.2.0.9015
-- Date: 07-06-2025
+- Version: 0.2.1
+- Date: 23-06-2025
 - Authors: Iago MOSQUEIRA (WMR), Karolina MOLLA GAZI (WMR).
 - Maintainer: Iago MOSQUEIRA (WMR) <iago.mosqueira@wur.nl>
 - Repository: <https://github.com/SPRFMO/FLjjm>
