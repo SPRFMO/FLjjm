@@ -447,13 +447,15 @@ readMCeval <- function(path, file=list.files(path, pattern='mceval*')[1],
   # LOAD file
   tab <- fread(file.path(path, file), verbose=FALSE,
     showProgress=FALSE) 
+
   setnames(tab, c("iter", "name", "unit", "year", "age", "data"))
 
   nits <- max(tab$iter)
 
-  # THIN
+  # SUBSET (THIN)
   if(iters != nits) {
-    tab <- tab[iter %in% seq.int(1, nits, by=round(nits / iters)),]
+    # tab <- tab[iter %in% seq.int(1, nits, by=round(nits / iters)),]
+    tab <- tab[iter %in% seq.int(1, iters),]
   }
 
   # EXTRACT refpts
