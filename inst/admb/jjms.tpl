@@ -325,7 +325,19 @@ DATA_SECTION
 
   imatrix pstkname(1,nstk,1,2)
   init_adstring stknameread;
+	int fut_sel;
+	int msy_sel;
  LOCAL_CALCS
+  msy_sel=15;
+  log_input(msy_sel);
+  fut_sel = 0;
+  if ( (on=option_match(argc,argv,"-fut_sel"))>-1)
+  {
+    fut_sel = atof(argv[on+1]);
+    cout<<"Got to fut_sel "<<fut_sel<<endl;
+  }
+  log_input(fut_sel);
+
   if ( (on=option_match(argc,argv,"-tac"))>-1)
   {
     hcr_tac_in = atof(argv[on+1]);
@@ -1560,8 +1572,12 @@ PARAMETER_SECTION
   // !!exit(1);
   3darray log_sel_fsh(1,nfsh,styr,endyr,1,nages)
   3darray sel_fsh(1,nfsh,styr,endyr,1,nages)
+  matrix sel_fut(1,nfsh,1,nages)
+  matrix sel_msy(1,nfsh,1,nages)
   matrix avgsel_fsh(1,nfsh,1,n_sel_ch_fsh);
 
+  matrix Ftot_fut(1,nstk,1,nages)
+  matrix seltmp(1,nfsh,1,nages);
   3darray Ftot(1,nstk,styr,endyr,1,nages)
   3darray F(1,nfsh,styr,endyr,1,nages)
   3darray eac_fsh(1,nfsh,1,nyrs_fsh_age,1,nages)
@@ -1632,23 +1648,16 @@ PARAMETER_SECTION
   number sigma
   matrix rec_like(1,nstk,1,4)
   vector catch_like(1,nfsh)
-  matrix catch_like_loo(1,nfsh,styr,endyr)
   vector age_like_fsh(1,nfsh)
-  matrix age_like_fsh_loo(1,nfsh,1,nyrs_fsh_age)
-
 //---------------------------------NEW
   vector length_like_fsh(1,nfsh)
-  matrix length_like_fsh_loo(1,nfsh,1,nyrs_fsh_length)
   vector length_like_ind(1,nind)
-  matrix length_like_ind_loo(1,nind,1,nyrs_ind_length)
 //---------------------------------NEW
 
   vector age_like_ind(1,nind)
-  matrix age_like_ind_loo(1,nind,1,nyrs_ind_age)
   matrix sel_like_fsh(1,nfsh,1,4)       
   matrix sel_like_ind(1,nind,1,4)       
   vector ind_like(1,nind)
-  matrix ind_like_loo(1,nind,1,nyrs_ind)
   vector fpen(1,6)    
   matrix post_priors(1,npar,1,8)
   vector post_priors_indq(1,nind)
@@ -1960,19 +1969,13 @@ FUNCTION write_mceval
     mceval<< mc_count<<" FMSY   "<<k<<" all "<<" all "<<Fmsy(k)<<  endl;
     mceval<< mc_count<<" R0   "<<k<<" all "<<" all "<<Rzero(k)<<  endl;
     mceval<< mc_count<<" B0   "<<k<<" all "<<" all "<<Bzero(k)<<  endl;
-    mceval<< mc_count<<" H   "<<k<<" all "<<" all "<<steepness(k)<<  endl;
     for (i=styr;i<=endyr;i++) {
       // SSB & rec
       mceval<< mc_count<<" SSB      "<<k<<" "<<i<<" all "<<Sp_Biom(k,i)<<  endl;
-      mceval<< mc_count<<" Fbar "<<k<<" "<<i<<" all "<<mfexp(fmort(k,i))<<  endl;
       mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
-      mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
-    // ADD Bmsy(y) - IM
-    get_msy(i);
-    mceval<< mc_count<<" SBMSYy  "<<k<<" "<<i<<" all "<<Bmsy(k)<<  endl;
       for (j=1;j<=nages;j++) 
       {
-        // natage
+        // catage, natage
         mceval<< mc_count<<" N_stock "<<k<<" "<<i<<" "<<j<<" "<<natage(k,i,j)<<  endl; 
       }
     }
@@ -1987,53 +1990,21 @@ FUNCTION write_mceval
         // SELEX F
         mceval<< mc_count<<" Sel_fsh "<<k<<" "<<i<<" "<<j<<" "<<sel_fsh(k,i,j)<<  endl; 
         mceval<< mc_count<<" C_fsh "<<k<<" "<<i<<" "<<j<<" "<<catage(k,i,j)<<  endl; 
-        mceval<< mc_count<<" F_faa "<<k<<" "<<i<<" "<<j<<" "<<F(k,i,j)<<  endl; 
       }
-        mceval<< mc_count<<" F_fsh "<<k<<" "<<i<<" "<<"all"<<" "<<mean(F(k,i))*max(sel_fsh(k,i))<<  endl; 
     }
   }
   // BY index
   for(int k=1;k<=nind;k++)
   {
-    for (i=1;i<=nyrs_ind(k);i++)
-    {
-      mceval<< mc_count<<" Q_ind "<<k<<" "<<yrs_ind(k,i)<<" "<< "all" <<" "<<q_ind(k,i)<<  endl;
-      mceval<< mc_count<<" Pred_ind "<<k<<" "<<yrs_ind(k,i)<<" "<< "all" <<" "<<pred_ind(k,i)<<  endl;
-  }
-    // Pred prop age ind
-    for (i=1;i<=nyrs_ind_age(k);i++) 
-      for (j=1;j<=nages;j++) 
-      mceval<< mc_count<<" Pred_prop_ind "<<k<<" "<<i<<" "<<j<<" "<<eac_ind(k,i,j)<<  endl;
-
     for (i=styr;i<=endyr;i++)
     {
       for (j=1;j<=nages;j++) 
       {
-      // SELEX I
-      mceval<< mc_count<<" Sel_ind "<<k<<" "<<i<<" "<<j<<" "<<sel_ind(k,i,j)<<  endl;
+        // SELEX I
+        mceval<< mc_count<<" Sel_ind "<<k<<" "<<i<<" "<<j<<" "<<sel_ind(k,i,j)<<  endl; 
       }
     }
   }
-  // LOO-IC stuff
-  // 1. catch likelihood output
-  for(k=1;k<=nfsh;k++) 
-    for(i=styr;i<=endyr;i++) mceval<<mc_count<<" Catch_lkhd_LOO "<<k<<" "<<i<<" 0 "<<catch_like_loo(k,i)<< endl;
-  // 2. age likelihood
-  for(k=1;k<=nfsh;k++) 
-    for(i=1;i<=nyrs_fsh_age(k);i++) mceval<<mc_count<<" Age_lkhd_LOO "<<k<<" "<<i<<" 0 "<<age_like_fsh_loo(k,i)<< endl; 
-  // 3. length likelihood
-  for(k=1;k<=nfsh;k++) 
-    for(i=1;i<=nyrs_fsh_length(k);i++) mceval<<mc_count<<" Length_lkhd_LOO "<<k<<" "<<i<<" 0 "<<length_like_fsh_loo(k,i)<< endl; 
-  // 4. length likelihood for index fisheries
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind_length(k);i++) mceval<<mc_count<<" Length_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<length_like_ind_loo(k,i)<< endl;
-  // 5. age likelihood for index fisheries
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind_age(k);i++) mceval<<mc_count<<" Age_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<age_like_ind_loo(k,i)<< endl; 
-  // 6. abundance index likelihood
-  for(k=1;k<=nind;k++) 
-    for(i=1;i<=nyrs_ind(k);i++) mceval<<mc_count<<" Abundance_lkhd_index_LOO "<<k<<" "<<i<<" 0 "<<ind_like_loo(k,i)<< endl; 
-  
   /*
 	mceval<<"N_stock"<<endl;
 	mceval<<natage << endl;
@@ -2056,7 +2027,7 @@ FUNCTION write_mceval
   /*
   // sdreport_matrix Sp_Biom(1,nstk,styr_sp,endyr+1)
   mc_count++;
-    // mceval<<"mcdraw type unit Year Age value"<<endl;
+    // mceval<<"mcdraw type Year Age value"<<endl;
   for (int k=1;k<=nstk;k++)
   {
     for (i=styr;i<=endyr;i++)
@@ -2760,6 +2731,7 @@ FUNCTION Get_Fishery_Predictions
   }
 
 FUNCTION Calc_Dependent_Vars
+  get_future_sel();
   get_msy();
   N_NoFsh.initialize();
   dvar_matrix Nnext(1,nstk,1,nages);
@@ -2784,10 +2756,9 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
+      depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
+      depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     }
-		// Moved these outside of time-step loop
-    depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
-    depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
@@ -2801,19 +2772,16 @@ FUNCTION Calc_Dependent_Vars
     totbiom(s,endyr+1)  = ABCBiom(s);
   }
   // Now do OFL for next year...
-  dvar_matrix seltmp(1,nfsh,1,nages);
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_matrix Ztmp(1,nstk,1,nages);
   seltmp.initialize();
   Fatmp.initialize();
   Ztmp.initialize();
-  for (k=1;k<=nfsh;k++)
-    seltmp(k) = (sel_fsh(k,endyr));
   for (s=1;s<=nstk;s++)
     Ztmp(s) = (M(s,styr));
   for (k=1;k<=nfsh;k++)
   { 
-    Fatmp(k)            = (Fratio(k) * Fmsy(sel_map(1,k)) * seltmp(k));
+    Fatmp(k)            = (Fratio(k) * Fmsy(sel_map(1,k)) * sel_fut(k));
     Ztmp(sel_map(1,k)) += Fatmp(k);
   }
   dvar_matrix survmsy(1,nstk,1,nages);
@@ -2934,13 +2902,8 @@ FUNCTION Cat_Like
   if (current_phase()>3)
   {
     for (k=1;k<=nfsh;k++)
-      for (i=styr;i<=endyr;i++) {
-        
-        catch_like_loo(k,i) = -.5*square(log(catch_bio(k,i)+.0001) - log(pred_catch(k,i)+.0001) )/catch_bio_lva(k,i); 
-        catch_like(k) -= catch_like_loo(k,i);
-
-        }
-   
+      for (i=styr;i<=endyr;i++)
+         catch_like(k) += .5*square(log(catch_bio(k,i)+.0001) - log(pred_catch(k,i)+.0001) )/catch_bio_lva(k,i);
   }
   else
   {
@@ -3224,10 +3187,8 @@ FUNCTION Srv_Like
     for (i=1;i<=nyrs_ind(k);i++)
     {
       // iyr = int(yrs_ind(k,i));
-      ind_like_loo(k,i) = -square(log(obs_ind(k,i)) - log(pred_ind(k,i)) ) / 
+      ind_like(k) += square(log(obs_ind(k,i)) - log(pred_ind(k,i)) ) / 
                                    (2.*obs_lse_ind(k,i)*obs_lse_ind(k,i));
-      ind_like(k) -= ind_like_loo(k,i);
-
     }
   /* normal distribution option to add someday...
     for (i=1;i<=nyrs_ind(k);i++)
@@ -3236,45 +3197,27 @@ FUNCTION Srv_Like
   */
 FUNCTION Age_Like
   age_like_fsh.initialize();
-  for (k=1;k<=nfsh;k++) {
-    for (int i=1;i<=nyrs_fsh_age(k);i++) {
-      age_like_fsh_loo(k,i) = n_sample_fsh_age(k,i)*(oac_fsh(k,i) + 0.001) * log(eac_fsh(k,i) + 0.001 ) ;
-      age_like_fsh(k) -= age_like_fsh_loo(k,i);
-      }
-  }
+  for (k=1;k<=nfsh;k++)
+    for (int i=1;i<=nyrs_fsh_age(k);i++)
+      age_like_fsh(k) -= n_sample_fsh_age(k,i)*(oac_fsh(k,i) + 0.001) * log(eac_fsh(k,i) + 0.001 ) ;
   age_like_fsh -= offset_fsh;
 //-----------------------------------NEW-----------------------
   length_like_fsh.initialize();
-  for (k=1;k<=nfsh;k++) {
-    for (int i=1;i<=nyrs_fsh_length(k);i++) {
-
-      length_like_fsh_loo(k,i) = n_sample_fsh_length(k,i)*(olc_fsh(k,i) + 0.001) * log(elc_fsh(k,i) + 0.001 ) ; 
-      length_like_fsh(k) -= length_like_fsh_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nfsh;k++)
+    for (int i=1;i<=nyrs_fsh_length(k);i++)
+      length_like_fsh(k) -= n_sample_fsh_length(k,i)*(olc_fsh(k,i) + 0.001) * log(elc_fsh(k,i) + 0.001 ) ;
   length_like_fsh -= offset_lfsh;
 //----------------------------------------------------------
   length_like_ind.initialize();
-  for (k=1;k<=nind;k++) {
-    for (int i=1;i<=nyrs_ind_length(k);i++) {
-
-      length_like_ind_loo(k,i) = n_sample_ind_length(k,i)*(olc_ind(k,i) + 0.001) * log(elc_ind(k,i) + 0.001 ) ;
-      length_like_ind(k) -= length_like_ind_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nind;k++)
+    for (int i=1;i<=nyrs_ind_length(k);i++)
+      length_like_ind(k) -= n_sample_ind_length(k,i)*(olc_ind(k,i) + 0.001) * log(elc_ind(k,i) + 0.001 ) ;
   length_like_ind -= offset_lind;
 //----------------------------------------------------------
   age_like_ind.initialize();
-  for (k=1;k<=nind;k++) {
-    for (int i=1;i<=nyrs_ind_age(k);i++) { 
-
-      age_like_ind_loo(k,i) = n_sample_ind_age(k,i)*(oac_ind(k,i)(mina(k),nages) + 0.001) * log(eac_ind(k,i)(mina(k),nages) + 0.001 ) ;
-      age_like_ind(k) -= age_like_ind_loo(k,i);
-
-      }
-  }
+  for (k=1;k<=nind;k++)
+    for (int i=1;i<=nyrs_ind_age(k);i++)
+      age_like_ind(k) -= n_sample_ind_age(k,i)*(oac_ind(k,i)(mina(k),nages) + 0.001) * log(eac_ind(k,i)(mina(k),nages) + 0.001 ) ;
   age_like_ind -= offset_ind;
 
 FUNCTION Oper_Model
@@ -3406,6 +3349,49 @@ FUNCTION Oper_Model
   if (!mceval_phase())
     exit(1);
 
+FUNCTION void get_future_sel()
+    f_tmp.initialize();
+    Ftot_fut.initialize();
+    sel_fut.initialize();
+    sel_msy.initialize();
+		for (k=1;k<=nfsh;k++) 
+		{
+			f_tmp(k) = mean(F(k,endyr));
+			for (int ii=endyr-msy_sel; ii<endyr; ii++)
+			{
+			  sel_msy(k)    += (sel_fsh(k,ii));
+			}
+			sel_msy(k)    /= msy_sel;
+		}
+
+    // Get future selectivity based on -fut_sel flag
+		if (fut_sel)
+		{
+			// pick up a scale factor (annual "effort") from terminal year
+      for (k=1;k<=nfsh;k++) 
+			{
+				f_tmp(k) = mean(F(k,endyr));
+				for (int ii=endyr-fut_sel; ii<endyr; ii++)
+				{
+				  sel_fut(k)    += (sel_fsh(k,ii));
+				}
+				sel_fut(k)    /= fut_sel;
+			  Ftot_fut(1)  += f_tmp(k)*sel_fut(k);
+			}
+		}
+		else
+		{
+      for (k=1;k<=nfsh;k++)
+			{
+			  f_tmp(k)      = mean(F(k,endyr));
+				sel_fut(k)    = (sel_fsh(k,endyr));
+			  Ftot_fut(1)  += f_tmp(k)*sel_fut(k);
+			}
+		}
+		//cout<<"Future selex"<<endl;
+		//cout << sel_fut <<endl; ad_exit(1);
+
+
 FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
     f_tmp.initialize();
     dvariable ftmp2;
@@ -3414,12 +3400,30 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
     Ftottmp.initialize();
     F_fut_tmp.initialize();
     dvector p_lastyr(1,nfsh);
+		// Need to remap F_fut_tmp to be based on mean selectivity when -fut_sel flag is non-zero
+		if (fut_sel)
+		{
+			// pick up a scale factor (annual "effort") from terminal year
+      for (k=1;k<=nfsh;k++) 
+			{
+				f_tmp(k) = mean(F(k,endyr));
+				for (int ii=endyr-fut_sel; ii<endyr; ii++)
+				{
+          F_fut_tmp(k) += F(k,ii);
+				}
+        F_fut_tmp(k)  = sel_fut(k) * f_tmp(k) ;
+			}
+		}
+		else
+		{
+      for (k=1;k<=nfsh;k++)
+			{
+        F_fut_tmp(k) = F(k,endyr);
+			}
+		}
+		// cout << Ftot_fut(s) <<endl<<F_fut_tmp<<endl; ad_exit(1);
+						
 
-    dvar_matrix seltmp(1,nfsh,1,nages);
-    seltmp.initialize();
-    for (k=1;k<=nfsh;k++) seltmp(k) = (sel_fsh(k,endyr));
-
-    for (k=1;k<=nfsh;k++) F_fut_tmp(k) = F(k,endyr);
     switch (iscenario)
     {
       case 1:
@@ -3446,14 +3450,14 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
         // f_tmp = SolveF2(endyr,nage_future(i), 0.5 * catch_lastyr );
         //for (int k=1;k<=nfsh;k++) f_tmp(k) = .5*mean(F(k,endyr));
         F_fut_tmp *= 1.25;
-        // for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = seltmp(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
+        // for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = sel_fut(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
         break;
       case 4:
         // for (int k=1;k<=nfsh;k++) f_tmp(k) = .25*mean(F(k,endyr));
         // F_fut_tmp *= 0.5;
         // ftmp2 = SolveF3(endyr, nage_future(1,i), 1150., 1);
         // for (k=1;k<=nfsh;k++)
-        for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = seltmp(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
+        for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = sel_fut(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
         break;
       case 5:
       // 15% increase...but doesn't seem to be working yet...
@@ -3466,7 +3470,7 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
           F_fut_tmp(k) = f_tmp(k)*sel_fsh(k,endyr);
 				}
         // f_tmp = SolveF3(endyr, natage(s,endyr+1), hcr_tac, s);
-        // for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = f_tmp(k)*seltmp(k);
+        // for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = f_tmp(k)*sel_fut(k);
         // cout<<catch_lastyr<<endl;// <<F_fut_tmp<<endl;exit(1);
         // cout << F_fut_tmp<<endl<<" ftmp2 "<<Fratio*ftmp2<<endl;exit(1);
         break;
@@ -3700,7 +3704,7 @@ FUNCTION void get_msy(int iyr)
   {
     dvariable F1;
     F1.initialize();
-    F1 = (0.8*natmortprior(mort_map(istk,1))); //Ojo First year //nreg(s) //yy_sr(s,iyr)
+    F1 = (0.98*natmortprior(mort_map(istk,1))); //Ojo First year //nreg(s) //yy_sr(s,iyr)
     dvariable F2;
     dvariable F3;
     dvariable yld1;
@@ -3769,11 +3773,12 @@ FUNCTION dvar_vector yld(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   dvar_vector Ctmp(1,nages);
   msy_stuff.initialize();
 
-  dvar_matrix seltmp(1,nfsh,1,nages);
-  seltmp.initialize();
+  dvar_matrix seltmp4(1,nfsh,1,nages);
+  seltmp4.initialize();
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_fsh(k,iyr); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp4(k) = sel_fsh(k,iyr); // NOTE uses last-year of fishery selectivity for projections.
+	// seltmp4 = sel_msy;
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_vector Ztmp(1,nages);
@@ -3781,7 +3786,7 @@ FUNCTION dvar_vector yld(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   Ztmp = M(istk,iyr);
   for (k=1;k<=nfsh;k++)
   { 
-    Fatmp(k) = Fratio(k) * Ftmp * seltmp(k);
+    Fatmp(k) = Fratio(k) * Ftmp * seltmp4(k);
     Ztmp    += Fatmp(k);
   } 
   dvar_vector survtmp = mfexp(-Ztmp);
@@ -3821,11 +3826,12 @@ FUNCTION dvar_vector yld(const dvar_vector& Fratio, const dvariable& Ftmp, int i
   dvar_vector Ctmp(1,nages);
   msy_stuff.initialize();
 
-  dvar_matrix seltmp(1,nfsh,1,nages);
-  seltmp.initialize();
+  dvar_matrix seltmp5(1,nfsh,1,nages);
+  seltmp5.initialize();
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_fsh(k,endyr); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp5(k) = sel_msy(k); //Ojo // NOTE uses last-year of fishery selectivity for projections.
+	// seltmp5 = sel_msy;
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_vector Ztmp(1,nages);
@@ -3833,7 +3839,7 @@ FUNCTION dvar_vector yld(const dvar_vector& Fratio, const dvariable& Ftmp, int i
   Ztmp = M(istk,styr);
   for (k=1;k<=nfsh;k++)
   { 
-    Fatmp(k) = Fratio(k) * Ftmp * seltmp(k);
+    Fatmp(k) = Fratio(k) * Ftmp * seltmp5(k);
     Ztmp    += Fatmp(k);
   } 
   dvar_vector survtmp = mfexp(-Ztmp);
@@ -3871,10 +3877,10 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   dvariable   yield;
   yield.initialize();
 
-  dvar_matrix seltmp(1,nfsh,1,nages);
+  dvar_matrix seltmp6(1,nfsh,1,nages);
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_fsh(k,iyr); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp6(k) = sel_fsh(k,iyr); // NOTE uses last-year of fishery selectivity for projections.
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_vector Ztmp(1,nages);
@@ -3882,7 +3888,7 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   Ztmp = M(istk,iyr);
   for (k=1;k<=nfsh;k++)
   { 
-    Fatmp(k) = Fratio(k) * Ftmp * seltmp(k);
+    Fatmp(k) = Fratio(k) * Ftmp * seltmp6(k);
     Ztmp    += Fatmp(k);
   } 
   dvar_vector survtmp = mfexp(-Ztmp);
@@ -3917,11 +3923,12 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   dvariable   yield;
   yield.initialize();
 
-  dvar_matrix seltmp(1,nfsh,1,nages);
-  seltmp.initialize();
+  dvar_matrix seltmp7(1,nfsh,1,nages);
+  seltmp7.initialize();
+	// seltmp7 = sel_msy;
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_fsh(k,endyr); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp7(k) = sel_msy(k); // NOTE uses last-year of fishery selectivity for projections.
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_vector Ztmp(1,nages);
@@ -3929,7 +3936,7 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, const dvariable& Ftmp,int is
   Ztmp = M(istk,styr);
   for (k=1;k<=nfsh;k++)
   { 
-    Fatmp(k) = Fratio(k) * Ftmp * seltmp(k);
+    Fatmp(k) = Fratio(k) * Ftmp * seltmp7(k);
     Ztmp    += Fatmp(k);
   } 
   dvar_vector survtmp = mfexp(-Ztmp);
@@ -3962,10 +3969,11 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, dvariable& Ftmp, dvariable& 
   dvar_vector Ctmp(1,nages);
   dvariable   yield   = 0.;
 
-  dvar_matrix seltmp(1,nfsh,1,nages);
+  // dvar_matrix seltmp(1,nfsh,1,nages);
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_fsh(k,endyr); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp(k) = sel_msy(k); // NOTE uses last-year of fishery selectivity for projections.
+	// seltmp = sel_msy;
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
   dvar_vector Ztmp(1,nages);
@@ -4167,7 +4175,7 @@ FUNCTION dvariable Requil(dvariable& phi, int iyr, int istk)
   return RecTmp;
   
 FUNCTION write_mceval_hdr
-    mceval<<"mcdraw type unit Year Age value"<<endl;
+    mceval<<"mcdraw type Year Age value"<<endl;
    /*
     for (k=1;k<=nind;k++)
       mceval<< " q_ind_"<< k<< " ";
@@ -4715,10 +4723,10 @@ FUNCTION write_proj
  newproj <<"#5year_Average_F(endyr-4,endyr_as_estimated_by_ADmodel)"<<endl;
  // Need to correct for maxf standardization 
 
- dvector seltmp(1,nages);
+ dvector seltmp2(1,nages);
  dvar_vector sumF(1,nstk);
  sumF.initialize();
- seltmp.initialize();
+ seltmp2.initialize();
  for (k=1;k<=nfsh;k++)
  {
    Fratio(k) = sum(F(k,endyr)) ;
@@ -4729,7 +4737,7 @@ FUNCTION write_proj
  // compute a 5-year recent average fishery-aggregated selectivity for output to projection model
  for (k=1;k<=nfsh;k++)
    for (j=1;j<=nages;j++)
-     seltmp(j) += value(Fratio(k))*(value(sel_fsh(k,endyr,j)) 
+     seltmp2(j) += value(Fratio(k))*(value(sel_fsh(k,endyr,j)) 
                  +value(sel_fsh(k,endyr-1,j))  
                  +value(sel_fsh(k,endyr-2,j))  
                  +value(sel_fsh(k,endyr-3,j))  
@@ -4759,8 +4767,8 @@ FUNCTION write_proj
  newproj <<"#" <<endl;
 
  newproj <<"#_Selectivity_fishery_scaled_to_max_at_one"<<aa<<endl;
- seltmp = value(sel_fsh(1,endyr)) +value(sel_fsh(1,endyr-1))  +value(sel_fsh(1,endyr-2));  
- newproj << seltmp/max(seltmp)<<endl;
+ seltmp2 = value(sel_fsh(1,endyr)) +value(sel_fsh(1,endyr-1))  +value(sel_fsh(1,endyr-2));  
+ newproj << seltmp2/max(seltmp2)<<endl;
  newproj <<"#_Numbers_at_age_end_year"<<aa<<endl;
    for (s=1;s<=nstk;s++) newproj <<natage(s,endyr)<< endl;
   if (styr<=1977)
@@ -5028,7 +5036,7 @@ FUNCTION dvar_vector SolveF2(const int& iyr, const dvector&  Catch, const int& i
   RETURN_ARRAYS_INCREMENT();
   dvariable dd = 10.;
   dvariable cc; 
-  dvar_matrix  seltmp(1,nfsh,1,nages);
+  dvar_matrix  seltmp3(1,nfsh,1,nages);
   dvar_matrix  wt_tmp(1,nfsh,1,nages);
   dvar_matrix Fratsel(1,nfsh,1,nages);
   dvar_vector N_tmp = natage(istk,iyr);
@@ -5045,12 +5053,12 @@ FUNCTION dvar_vector SolveF2(const int& iyr, const dvector&  Catch, const int& i
   // Initial guess for Fratio
   for (k=1;k<=nfsh;k++)
   {
-    seltmp(k)= sel_fsh(k,iyr); // Selectivity
+    seltmp3(k)= sel_fsh(k,iyr); // Selectivity
     wt_tmp(k)= wt_fsh(k,iyr); // 
-    btmp(k)  =  N_tmp * elem_prod(seltmp(k),wt_tmp(k));
+    btmp(k)  =  N_tmp * elem_prod(seltmp3(k),wt_tmp(k));
     hrate(k) = Catch(k)/btmp(k);
     Frat(k)  = Catch(k)/sum(Catch);
-    Fratsel(k) = Frat(k)*seltmp(k);
+    Fratsel(k) = Frat(k)*seltmp3(k);
     ftmp(k) = 1.1*(1.- posfun(1.-hrate(k),.10,fpen(4)));
   }
   // Initial fleet-specific F
@@ -5078,7 +5086,7 @@ FUNCTION dvar_vector SolveF2(const int& iyr, const dvector&  Catch, const int& i
               ftmp(k)  += ( Catch(k)-cc ) / btmp(k);
             }
             Frat(k)    = ftmp(k)/sum(ftmp);
-            Fratsel(k) = Frat(k)*seltmp(k);
+            Fratsel(k) = Frat(k)*seltmp3(k);
           }
         }
       }
@@ -5760,6 +5768,8 @@ FUNCTION Write_R
     report_name = "For_R_"+ str(s) + ".rep";
     ofstream R_report(report_name);
     ofstream csv_report(report_csv);
+    R_report<< "$sel_msy"<<endl<<sel_msy<<endl; 
+    R_report<< "$sel_fut"<<endl<<sel_fut<<endl; 
     R_report<< "$repl_F"<<endl<<repl_F(s)<<endl; 
     R_report<< "$repl_yld"<<endl<<repl_yld(s)<<endl; 
     R_report<< "$repl_SSB"<<endl<<repl_SSB(s)<<endl; 
@@ -6750,6 +6760,9 @@ FUNCTION Write_R
       R_report   << "$rec_like_pen_stock_" <<k<<endl<<rec_like(k,2)<< endl;
       R_report   << "$rec_like_fut_stock_" <<k<<endl<<rec_like(k,3)<< endl;
     }
+    R_report   << "$Ftot_fut" << endl<< Ftot_fut<<endl;
+				// seltmp(k)    = (sel_fsh(k,endyr));
+        // F_fut_tmp(k) = F(k,endyr);
     R_report.close();
   }
 
@@ -6930,6 +6943,5 @@ FUNCTION double calc_Francis_weights(dmatrix oac, dvar_matrix eac, ivector sam,c
     // lfwt(k) *= lf_lambda(k);
     return lfwt;
   }
-
 
 
