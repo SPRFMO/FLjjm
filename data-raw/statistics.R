@@ -12,18 +12,22 @@ library(mse)
 
 data(statistics, package="mse")
 
-statistics <- statistics[c("SBMSY", "FMSY", "PSBMSY", "PSBlim", "C", "F", "SB",
-  "IACC", "PC0", "green", "red")]
+statistics <- statistics[c("SBMSY", "PSBMSY", "PSBlim", "SB", "SB0", "R",
+  "F", "FMSY", "green", "red", "orange", "yellow", "C", "IACC", "PC0")]
 
 # DEFINE Blim as 10% B0
 statistics$PSBlim[[1]]  <- ~yearMeans((SB/(SB0 * 0.10)) > 1)
 
-# P(C < target)
-statistics$PCtarget <- list(~yearMeans(C < target), name="P(C<target)",
+# P(C < target), needs tracking['decision.hcr',]
+statistics$PCtarget <- list(~yearMeans(decision.hcr > 1), name="P(C<target)",
   desc="Probability of catch falling below HCR target level")
 
-# P(TAC limited)
-statistics$PTAClimit <- list(~yearMeans(FLQuant(tac.hcr < hcr)), name="P(TAClimit)",
-  desc="Probability of TAC change being limited")
+# P(TAC limited by dupp), needs tracking['rule.hcr',]
+statistics$PTAClimit <- list(~yearMeans(FLQuant(rule.hcr < hcr)), name="P(TAClimit)",
+  desc="Probability of TAC being limited")
+
+# F/F_recent
+statistics$Frecent <- list(~yearMeans(F), name="Frecent",
+  desc="Mean fishing mortality over recent values")
 
 save(statistics, file="../data/statistics.RData", compress="xz")
