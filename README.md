@@ -18,6 +18,18 @@ To install this package, start R and enter:
 
 ## Documentation
 
+### CALL tree jjms.sa
+
+- jjms.sa(stk, idx)
+ - jjms(stock, indices, dat, ctl)
+  - buildjjmctl(stock, indices, ctl)
+  - buildjjmdata(stock, indices, dat)
+  - runjjms(mod, path)
+    - jjmR::writeJJM(object, path)
+    - exejjms(name, path)
+      - ./jjms
+  - readRep/readFLSjjm
+
 
 ## License
 Copyright (c) 2020-2024 WMR. Released under the EUPL 1.2.

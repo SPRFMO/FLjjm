@@ -1,11 +1,11 @@
 import("methods")
+import("jjmR")
 import("FLCore")
 import("FLFishery")
 import("FLasher")
 import("ggplotFL")
 import("data.table")
 import("mse")
-import("jjmR")
 import("foreach")
 
 importFrom("progressr", "progressor")
