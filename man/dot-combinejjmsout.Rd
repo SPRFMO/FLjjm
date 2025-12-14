@@ -15,6 +15,7 @@
 A combined list of fisheries model results.
 }
 \description{
-Combines results from two sources of fisheries model runs, handling both single and
-multiple stock scenarios. It combines data such as stock numbers, harvest, data, and control.
+Combines results from two sources of fisheries model runs, handling both
+single and multiple stock scenarios. It combines data such as stock numbers,
+harvest, data, and control.
 }

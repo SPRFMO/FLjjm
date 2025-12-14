@@ -4,7 +4,7 @@
 \alias{runjjms}
 \title{Run JJMS Model}
 \usage{
-runjjms(mod, path = tempfile(), args = "", verbose = TRUE)
+runjjms(mod, path = tempfile(), args = "", verbose = TRUE, clean = TRUE)
 }
 \arguments{
 \item{mod}{The JJMS model data to be executed.}
@@ -13,7 +13,7 @@ runjjms(mod, path = tempfile(), args = "", verbose = TRUE)
 
 \item{args}{Additional arguments for the JJMS model execution.}
 
-\item{verbose}{If TRUE, execution details are printed; otherwise, they are suppressed.}
+\item{verbose}{if TRUE, execution details are printed; otherwise, they are suppressed.}
 }
 \value{
 The path where the JJMS model was executed.

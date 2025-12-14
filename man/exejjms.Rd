@@ -21,6 +21,6 @@ exejjms(name, path, args = "", verbose = TRUE, clean = TRUE)
 Invisible path where the model was executed.
 }
 \description{
-Executes the JJMS model with specified arguments, manages file operations for the model run,
-and optionally cleans up the output directory.
+Executes the JJMS model with specified arguments, manages file operations
+for the model run, and optionally cleans up the output directory.
 }

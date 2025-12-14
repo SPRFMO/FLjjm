@@ -20,7 +20,7 @@
 #' @return A combined data.table with performance metrics
 #'
 #' @examples
-#' slick_performance(x = my_mps_data, om = my_om_data, statistics = my_statistics)
+#' # slick_performance(x = my_mps_data, om = my_om_data, statistics = my_statistics)
 #'
 #' @export
 

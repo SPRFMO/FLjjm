@@ -7,12 +7,11 @@
 jjms(
   stock,
   indices,
-  dat,
-  ctl,
+  dat = attr(stock, "dat"),
+  ctl = attr(stock, "ctl"),
   path = tempfile(),
   mp = FALSE,
-  clean = mp,
-  lengthcomp_F3 = NULL
+  clean = mp
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ jjms(
 \item{mp}{If TRUE, runs in parallel; otherwise, runs sequentially.}
 
 \item{clean}{If TRUE, cleans up temporary files after execution.}
-
-\item{lengthcomp_F3}{Optional length composition data for F3.}
 }
 \value{
 The updated FLStock or list of FLStocks after model execution.
