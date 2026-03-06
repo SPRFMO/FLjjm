@@ -517,10 +517,10 @@ readMCeval <- function(path, file=list.files(path, pattern='mceval*')[1],
     as.FLQuant(x[, list(iter, year, age, data)], units="")))
 
   # EXTRACT pred ind
-  pids <- tab[name == "Pred_ind", .(iter, unit, year, age, data)]
+  #pids <- tab[name == "Pred_ind", .(iter, unit, year, age, data)]
 
-  pidqs <- FLQuants(lapply(split(pids, by="unit"), function(x)
-    as.FLQuant(x[, list(iter, year, age, data)], units="")))
+  #pidqs <- FLQuants(lapply(split(pids, by="unit"), function(x)
+  #  as.FLQuant(x[, list(iter, year, age, data)], units="")))
 
   # EXTRACT F by fishery
   ffish <- tab[name == "F_faa", .(iter, unit, year, age, data)]
@@ -529,10 +529,9 @@ readMCeval <- function(path, file=list.files(path, pattern='mceval*')[1],
     as.FLQuant(x[, list(iter, year, age, data)], units="f")))
 
   # EXTRACT LOO lkhds
-  lookhd <- tab[grepl("LOO", name), .(name, iter, unit, year, data)]
+  # lookhd <- tab[grepl("LOO", name), .(name, iter, unit, year, data)]
 
   return(list(refpts=refpts, n=nqs, deviances=deqs, catch.sel=selqs,
-    landings.n=caaqs, index.sel=iselqs, index.q=qqs, index.hat=pidqs,
-    partfs=ffishs, lookhd=lookhd))
+    landings.n=caaqs, index.sel=iselqs, partfs=ffishs))
 }
 # }}}

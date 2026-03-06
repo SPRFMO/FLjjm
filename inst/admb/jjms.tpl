@@ -1972,7 +1972,12 @@ FUNCTION write_mceval
     for (i=styr;i<=endyr;i++) {
       // SSB & rec
       mceval<< mc_count<<" SSB      "<<k<<" "<<i<<" all "<<Sp_Biom(k,i)<<  endl;
+      mceval<< mc_count<<" Fbar "<<k<<" "<<i<<" all "<<mfexp(fmort(k,i))<<  endl;
       mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
+      mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
+    // ADD Bmsy(y) - IM
+    get_msy(i);
+    mceval<< mc_count<<" SBMSYy  "<<k<<" "<<i<<" all "<<Bmsy(k)<<  endl;
       for (j=1;j<=nages;j++) 
       {
         // catage, natage
@@ -1985,12 +1990,17 @@ FUNCTION write_mceval
   // BY fishery
   for(int k=1;k<=nfsh;k++)
   {
+    // Q I
+    mceval<< mc_count<<" Q_ind "<<k<<" "<<i<<" "<<"all"<<" "<<q_ind(k,nyrs_ind(k))<<  endl; 
+    mceval<< mc_count<<" Pred_ind "<<k<<" "<<i<<" "<<"all"<<" "<<pred_ind(k,nyrs_ind(k))<<  endl; 
     for (i=styr;i<=endyr;i++) {
       for (j=1;j<=nages;j++) {
         // SELEX F
         mceval<< mc_count<<" Sel_fsh "<<k<<" "<<i<<" "<<j<<" "<<sel_fsh(k,i,j)<<  endl; 
         mceval<< mc_count<<" C_fsh "<<k<<" "<<i<<" "<<j<<" "<<catage(k,i,j)<<  endl; 
+        mceval<< mc_count<<" F_faa "<<k<<" "<<i<<" "<<j<<" "<<F(k,i,j)<<  endl; 
       }
+        mceval<< mc_count<<" F_fsh "<<k<<" "<<i<<" "<<"all"<<" "<<mean(F(k,i))*max(sel_fsh(k,i))<<  endl; 
     }
   }
   // BY index
@@ -2756,9 +2766,9 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
+    }
       depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
       depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
-    }
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
@@ -3427,7 +3437,7 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
     switch (iscenario)
     {
       case 1:
-        // no multiplcation needed...it's 1.0...F_fut_tmp *= 1.087;
+        // no multiplcation needed...its 1.0.F_fut_tmp *= 1.087;
         // f_tmp = F35;
         // for (int k=1;k<=nfsh;k++) f_tmp(k) = SolveF2(endyr,nage_future(i), 1.0  * catch_lastyr(k));
         break;
@@ -3460,7 +3470,7 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
         for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = sel_fut(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
         break;
       case 5:
-      // 15% increase...but doesn't seem to be working yet...
+      // 15% increase...but doesnt seem to be working yet...
         ftmp2.initialize();
 				// First line gives by each year
         ftmp2 = SolveF3(endyr, nage_future(s,styr_fut), hcr_tac(s), s);
@@ -3600,7 +3610,7 @@ FUNCTION Future_projections
           /*   */
         }
       }
-    }   //End of loop over F's
+    }   //End of loop over Fs
     Sp_Biom(s,styr_fut) = Sp_Biom_future(s,styr_fut);
   } //End over stocks
 
@@ -4175,7 +4185,7 @@ FUNCTION dvariable Requil(dvariable& phi, int iyr, int istk)
   return RecTmp;
   
 FUNCTION write_mceval_hdr
-    mceval<<"mcdraw type Year Age value"<<endl;
+    mceval<<"mcdraw type unit Year Age value"<<endl;
    /*
     for (k=1;k<=nind;k++)
       mceval<< " q_ind_"<< k<< " ";
