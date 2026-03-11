@@ -27,6 +27,7 @@ export(
   "buildjjmctl",
   "buildjjmdata",
   "calljjms",
+  "cjm.iem",
   "cjm.oem",
   "cjmage2len",
   "exejjms",

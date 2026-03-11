@@ -417,3 +417,38 @@ setMethod("catch", signature(object="FLStocks"), function(object) {
   return(total_catch)
 })
 # }}}
+
+# cjm.iem {{{
+cjm.iem <- function(ctrl, args, tracking, F3prop, correction = NULL) {
+
+  # VARIABLES
+  spread(args)
+
+  # CORRECT total catch
+  if (!is.null(correction)) {
+    iters(ctrl)[, "value", ] <- iters(ctrl)[, "value", ] * (1 + correction)
+  }
+
+  # GET F3 and total catch
+  f3catch <- c(iters(ctrl)[3, 2, , drop = FALSE])
+  fscatch <- c(apply(iters(ctrl)[, 2, , drop = FALSE], 2:3, sum))
+
+  # COMPUTE current F3 ratio
+  ratio3 <- f3catch / fscatch
+
+  # DEAL with zero total catch
+  ratio3[fscatch == 0] <- 1
+
+  # MIMIC separate decision for fishery 3
+  iters(ctrl)[3, 2, ] <- (c(F3prop[, ac(mys)]) * iters(ctrl)[3, 2, ]) / ratio3
+
+  # TRACK new total catch
+  #   track(tracking, "tac.iem", ay) <- c(apply(iters(ctrl)[, 2, , drop = FALSE],
+  #  c(2,3), sum))
+
+  # TODO: TRACK catch by fishery
+
+  return(list(ctrl = ctrl, tracking = tracking))
+}
+
+# }}}
