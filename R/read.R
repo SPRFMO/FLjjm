@@ -290,10 +290,10 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
       om@fisheries[[i]][[1]]@catch.sel <- outmc$catch.sel[[i]] %/% 
         apply(outmc$catch.sel[[i]], 2:6, max)
 
-      # ASSIGN catch.n
+      # ASSIGN catch.n, ESTIMATED!
       # om@fisheries[[i]][[1]]@landings.n <- outmc$landings.n[[i]]
       
-      # CALCULATE effort  = sum(F / sel)
+      # CALCULATE pseudo effort  = sum(F / sel)
       effort(om@fisheries[[i]]) <- quantMeans(outmc$partfs[[i]] /
         (outmc$catch.sel[[i]]))
     }
@@ -367,10 +367,8 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
 
   # BUILD observations
   if(nstks == 1) {
-
     stk <- propagate(buildFLSjjm(mod), iter=iter)
-    obs <- list(CJM=list(stk=stk, idx=idx, dat=dat, ctl=ctl))
-
+    obs <- list(CJM=list(stk=stk, idx=idx))# , dat=dat, ctl=ctl))
   } else if (nstks == 2) {
     stk <- lapply(seq(2), function(i)
       propagate(buildFLSojjm(mod, i), iter=iter))
@@ -379,7 +377,19 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
     obs <- list(Southern=Southern, North=North, dat=dat, ctl=ctl)
   }
 
-  return(FLoem(method=method, observations=obs, ...))
+  # BUILD deviances
+  res <- FLQuants(Map(function(x,y) exp(iter(residuals(x, y), seq(iter))),
+    x=lapply(idx, index), y=outmc$index.hat))
+
+  if(nstks == 1) {
+    devs <- list(CJM=list(idx=res))
+  } else if (nstks == 2) {
+    Southern <- list(idx=res[c(1,2,3,4,7)])
+    North <- list(idx=res[c(5,6)])
+    devs <- list(Southern=Southern, North=North)
+  }
+
+  return(FLoem(method=method, observations=obs, deviances=devs, ...))
 
 } # }}}
 
