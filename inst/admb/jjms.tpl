@@ -2003,13 +2003,10 @@ FUNCTION write_mceval
   // BY index
   for(int k=1;k<=nind;k++)
   {
-    for (i=1;i<nyrs_ind(k);i++)
+    for (i=1;i<=nyrs_ind(k);i++)
     {        
-      int iyr=yrs_ind(k,i);
-      for (int ii=iyr;ii<yrs_ind(k,i+1);ii++) {
-        mceval<< mc_count<<" Q_ind "<<k<<" "<<ii<<" "<<"all"<<" "<<q_ind(k,i)<<  endl; 
-        mceval<< mc_count<<" Pred_ind "<<k<<" "<<ii<<" "<<"all"<<" "<<pred_ind(k,i)<<  endl; 
-      }
+        mceval<< mc_count<<" Q_ind "<<k<<" "<<yrs_ind(k,i)<<" "<<"all"<<" "<<q_ind(k,i)<<  endl; 
+        mceval<< mc_count<<" Pred_ind "<<k<<" "<<yrs_ind(k,i)<<" "<<"all"<<" "<<pred_ind(k,i)<<  endl; 
     }
     for (i=styr;i<=endyr;i++)
     {
