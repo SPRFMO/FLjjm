@@ -11,8 +11,8 @@ library(mse)
 
 data(statistics, package="mse")
 
-statistics <- statistics[c("SBMSY", "PSBMSY", "PSBlim", "SB", "SB0", "R",
-  "F", "FMSY", "green", "red", "orange", "yellow", "C", "CPUE", "IACC", "PC0")]
+statistics <- statistics[c("SB", "SBMSY", "PSBMSY", "PSBlim", "SB0", "R",
+  "F", "FMSY", "PFMSY", "green", "red", "orange", "yellow", "C", "CPUE", "IACC", "PC0")]
 
 # DEFINE Blim as 10% B0
 statistics$PSBlim[[1]]  <- ~yearMeans((SB/(SB0 * 0.10)) > 1)
