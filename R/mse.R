@@ -10,11 +10,10 @@
 # cjm.oem {{{
 
 cjm.oem <- function(stk, deviances, observations, stability=1,
-  wts=TRUE, jjms=TRUE, F3sel, args, tracking) {
+  wts=TRUE, jjms=FALSE, F3sel, args, tracking) {
 
   # SET dimension args
   spread(args)
-  dyrs <- ac(seq(dy - frq + 1, dy))
 
   # CALL sampling.oem for stk & idx
   res <- sampling.oem(stk=stk, deviances=deviances,
@@ -29,7 +28,7 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
 
   # UPDATE idx: 2, 3, 6, 7
   for(i in nidx[nidx %in% c("Chile_AcousN", "Chile_CPUE", "Peru_CPUE", "Offshore_CPUE")])
-    observations$idx[[i]][, dyrs] <- res$idx[[i]][, dyrs]
+    observations$idx[[i]][, ac(dys)] <- res$idx[[i]][, ac(dys)]
 
   # DROP last year from idx[[7]]
   if("Offshore_CPUE" %in% nidx)
