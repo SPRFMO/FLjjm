@@ -25,9 +25,11 @@ globalVariables(c("data", "age", ".", "unit"))
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLBiol] buildFLBjjm
 #' @examples
+#' \dontrun{
 #' bio <- readFLBjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(bio)
+# }
 
 readFLBjjm <- function(name, path, stock=1) {
 
@@ -53,9 +55,11 @@ readFLBjjm <- function(name, path, stock=1) {
 #'
 #' @seealso [jjmR::readJJM] [FLCore::FLIndices] [FLCore::FLIndex] buildFLIsjjm
 #' @examples
+#' \dontrun{
 #' indices <- readFLIsjjm(name="h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(indices)
+#' }
 
 readFLIsjjm <- function(name, path) {
 
@@ -81,9 +85,11 @@ readFLIsjjm <- function(name, path) {
 #'
 #' @seealso [jjmR::readJJM] [FLFishery::FLFisheries] [FLFishery::FLFishery] buildFLFsjjm
 #' @examples
+#' \dontrun{
 #' fisheries <- readFLFsjjm(name="h1_1.07",
 #'   path = system.file("ext-data", "single_stock", package="FLjjm"))
 #' summary(fisheries)
+#' }
 
 readFLFsjjm <- function(name, path) {
 
@@ -326,6 +332,7 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
 #'
 #' @seealso [jjmR::readJJM] [mse::FLoem] buildFLSjjm buildFLIsjjm
 #' @examples
+#' \dontrun{
 #' # One stock OM
 #' oem <- readFLoemjjm(name="h1_1.07",
 #'   path=system.file("ext-data", "single_stock", package="FLjjm"))
@@ -334,6 +341,7 @@ readFLomjjm <- function(name, path, iter=NULL, ...) {
 #' oemtwo <- readFLoemjjm(name="h2_1.07",
 #'   path=system.file("ext-data", "two_stock", package="FLjjm"))
 #' oemtwo
+#' }
 
 readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
 
@@ -374,11 +382,11 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
       propagate(buildFLSojjm(mod, i), iter=iter))
     Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
     North <- list(stk=stk[[2]], idx=idx[c(5,6)])
-    obs <- list(Southern=Southern, North=North, dat=dat, ctl=ctl)
+    obs <- list(Southern=Southern, North=North)#, dat=dat, ctl=ctl)
   }
 
-  # BUILD deviances
-  res <- FLQuants(Map(function(x,y) exp(iter(residuals(x, y), seq(iter))),
+  # BUILD deviances idx deviances as log residuals
+  res <- FLQuants(Map(function(x,y) exp(iter(residuals(x, y, type="log"), seq(iter))),
     x=lapply(idx, index), y=outmc$index.hat))
 
   if(nstks == 1) {

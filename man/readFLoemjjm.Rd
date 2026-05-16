@@ -41,6 +41,7 @@ containing the past observations of catch and biology (as an \emph{FLStock} or
 \dontrun{
 idx <- readFLoemjjm("h1_1.07", path = system.file("ext-data","single_stock", package="FLjjm"), iter = 10)
 }
+\dontrun{
 # One stock OM
 oem <- readFLoemjjm(name="h1_1.07",
   path=system.file("ext-data", "single_stock", package="FLjjm"))
@@ -49,6 +50,7 @@ oem
 oemtwo <- readFLoemjjm(name="h2_1.07",
   path=system.file("ext-data", "two_stock", package="FLjjm"))
 oemtwo
+}
 }
 \seealso{
 \code{readFLIsjjm}, \code{readMCeval}

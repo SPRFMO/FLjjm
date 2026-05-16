@@ -43,9 +43,11 @@ idx <- readFLIsjjm(name = "h1_1.07",
   path = system.file("ext-data", "single_stock", package = "FLjjm"))
 plot(idx)
 }
+\dontrun{
 indices <- readFLIsjjm(name="h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(indices)
+}
 }
 \seealso{
 \code{buildFLIsjjm}, \code{jjmR::readJJM}

@@ -48,9 +48,6 @@ biol <- readFLBjjm(name = "h1_1.07",
   path = system.file("ext-data", "single_stock", package = "FLjjm"))
 summary(biol)
 }
-bio <- readFLBjjm(name="h1_1.07",
-  path=system.file("ext-data", "single_stock", package="FLjjm"))
-summary(bio)
 }
 \references{
 EUPL 1.2

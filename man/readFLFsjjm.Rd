@@ -43,9 +43,11 @@ fis <- readFLFsjjm(name = "h1_1.07",
   path = system.file("ext-data", "single_stock", package = "FLjjm"))
 str(fis)
 }
+\dontrun{
 fisheries <- readFLFsjjm(name="h1_1.07",
   path = system.file("ext-data", "single_stock", package="FLjjm"))
 summary(fisheries)
+}
 }
 \seealso{
 \code{buildFLFsjjm}
