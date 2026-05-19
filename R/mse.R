@@ -19,7 +19,7 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
   res <- sampling.oem(stk=stk, deviances=deviances,
     observations=observations, args=args, tracking=tracking)
 
-  #
+  # NAMES indices
   nidx <- names(observations$idx)
 
   # DROP 2022 from idx[[2]]
@@ -51,18 +51,19 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
         ctl[[i]])
       dat[[i]] <- buildjjmdata(iter(res$stk, i), iter(res$idx, i), dat[[i]],
         lengthcomp_F3=f3lengths[[i]])
+
+      
+      # KEEP new dat & ctl
+      observations[c('dat', 'ctl')]  <- list(dat, ctl)
+
+      # ATTACH to stk
+      attr(res$stk, "ctl") <- ctl
+      attr(res$stk, "dat") <- dat
     }
-
-    # STORE new observations in observations
-    observations$stk[, dyrs] <- res$stk[, dyrs]
-
-    # KEEP new dat & ctl
-    observations[c('dat', 'ctl')]  <- list(dat, ctl)
-
-    # ATTACH to stk
-    attr(res$stk, "ctl") <- ctl
-    attr(res$stk, "dat") <- dat
   }
+
+  # STORE new observations in observations
+  observations$stk[, ac(dys)] <- res$stk[, ac(dys)]
 
   return(list(stk = res$stk, idx = res$idx,
     observations = observations, tracking = res$tracking))
