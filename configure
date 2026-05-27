@@ -1,9 +1,0 @@
-#!/bin/sh
-
-if command -v admb >/dev/null 2>&1; then
-    echo "ADMB found"
-    echo "HAVE_ADMB=1" > src/Makevars.local
-else
-    echo "ADMB not found; using bundled binaries"
-    echo "HAVE_ADMB=0" > src/Makevars.local
-fi
