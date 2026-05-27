@@ -1,0 +1,25 @@
+include Makevars.local
+
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+BIN_DIR=../inst/bin/macos
+else
+BIN_DIR=../inst/bin/linux
+endif
+
+TPL=../inst/admb/jjms.tpl
+
+ifeq ($(HAVE_ADMB),1)
+
+all:
+	@echo "Compiling ADMB model"
+	cd ../inst/admb && admb jjms.tpl
+	cp ../inst/admb/jjms $(BIN_DIR)/
+
+else
+
+all:
+	@echo "Using bundled ADMB binary"
+
+endif

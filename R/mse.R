@@ -22,9 +22,9 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
   # NAMES indices
   nidx <- names(observations$idx)
 
-  # DROP 2022 from idx[[2]]
-  if("Chile_AcousN" %in% nidx)
-    res$idx[[2]] <- res$idx[[2]][, -39]
+  # DROP 2022 from idx[["Chile_AcousN"]]
+  #if("Chile_AcousN" %in% nidx)
+  #  res$idx[[2]] <- res$idx[[2]][, -39]
 
   # UPDATE idx: 2, 3, 6, 7
   for(i in nidx[nidx %in% c("Chile_AcousN", "Chile_CPUE", "Peru_CPUE", "Offshore_CPUE")])
