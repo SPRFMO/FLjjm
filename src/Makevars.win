@@ -1,16 +1,16 @@
-!include Makevars.local
+-include Makevars.local
 
 TPL=../inst/admb/jjms.tpl
 
-!if "$(HAVE_ADMB)" == "1"
+ifeq ($(HAVE_ADMB),1)
 
 all:
-	cd ..\\inst\\admb && admb jjms.tpl
-	copy ..\\inst\\admb\\jjms.exe ..\\inst\\bin\\windows\\
+	cd ..\inst\admb && admb jjms.tpl
+	copy ..\inst\admb\jjms.exe ..\inst\bin\windows\
 
-!else
+else
 
 all:
-	@echo Using bundled ADMB binary
+	@echo "Using bundled ADMB binary"
 
-!endif
+endif
