@@ -3,7 +3,7 @@
 where admb >nul 2>nul
 
 if %ERRORLEVEL% == 0 (
-    echo HAVE_ADMB=1 > src\Makevars.local
+    echo HAVE_ADMB=1> src\Makevars.local
 ) else (
-    echo HAVE_ADMB=0 > src\Makevars.local
+    echo HAVE_ADMB=0> src\Makevars.local
 )
