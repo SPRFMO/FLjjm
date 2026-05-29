@@ -1,15 +1,14 @@
 -include Makevars.local
 
 HAVE_ADMB := $(strip $(HAVE_ADMB))
-ADMB_EXE  := $(strip $(ADMB_EXE))
 
 TPL=../inst/admb/jjms.tpl
 
 ifeq ($(HAVE_ADMB),1)
 
 all:
-	cd ../inst/admb && "$(ADMB_EXE)" jjms.tpl
-	copy ../inst/admb/jjms.exe ../inst/bin/windows/
+	cd ../inst/admb && cmd.exe /c admb jjms.tpl
+	cp ../inst/admb/jjms.exe ../inst/bin/windows/
 
 else
 
