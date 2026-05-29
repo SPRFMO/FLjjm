@@ -1,0 +1,18 @@
+#!/bin/sh
+
+UNAME_S=$(uname -s)
+
+if [ "$UNAME_S" = "Darwin" ]; then
+    BIN_DIR="inst/bin/macos"
+else
+    BIN_DIR="inst/bin/linux"
+fi
+
+if command -v admb >/dev/null 2>&1; then
+    echo "ADMB found, compiling jjms.tpl for $UNAME_S"
+    cd inst/admb && admb jjms.tpl
+    cp jjms ../$BIN_DIR/
+    echo "Binary installed to $BIN_DIR"
+else
+    echo "ADMB not found; using bundled binary in $BIN_DIR"
+fi

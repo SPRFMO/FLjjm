@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "Windows: using pre-built binary in inst/bin/windows/"
