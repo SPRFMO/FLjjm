@@ -1,0 +1,11 @@
+@echo off
+
+for /f "tokens=*" %%i in ('where admb 2^>nul') do set ADMB_PATH=%%i
+
+if defined ADMB_PATH (
+    echo HAVE_ADMB=1> src\Makevars.local
+    echo ADMB_EXE=%ADMB_PATH%>> src\Makevars.local
+) else (
+    echo HAVE_ADMB=0> src\Makevars.local
+    echo ADMB_EXE=admb>> src\Makevars.local
+)
