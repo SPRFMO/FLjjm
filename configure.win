@@ -1,11 +1,14 @@
-@echo off
+#!/bin/sh
 
-for /f "tokens=*" %%i in ('where admb 2^>nul') do set ADMB_PATH=%%i
+# Use cmd.exe to search Windows PATH (not MSYS2 PATH)
+ADMB_PATH=$(cmd.exe /c "where admb" 2>/dev/null | head -1 | tr -d '\r')
 
-if defined ADMB_PATH (
-    echo HAVE_ADMB=1> src\Makevars.local
-    echo ADMB_EXE=%ADMB_PATH%>> src\Makevars.local
-) else (
-    echo HAVE_ADMB=0> src\Makevars.local
-    echo ADMB_EXE=admb>> src\Makevars.local
-)
+if [ -n "$ADMB_PATH" ]; then
+    echo "ADMB found at: $ADMB_PATH"
+    echo "HAVE_ADMB=1" > src/Makevars.local
+    echo "ADMB_EXE=$ADMB_PATH" >> src/Makevars.local
+else
+    echo "ADMB not found; using bundled binaries"
+    echo "HAVE_ADMB=0" > src/Makevars.local
+    echo "ADMB_EXE=admb" >> src/Makevars.local
+fi
