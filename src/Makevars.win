@@ -1,17 +1,4 @@
 -include Makevars.local
 
-HAVE_ADMB := $(strip $(HAVE_ADMB))
-
-TPL=../inst/admb/jjms.tpl
-
-ifeq ($(HAVE_ADMB),1)
-
 all:
-	cmd.exe /c "cd ..\inst\admb && admb jjms.tpl && copy jjms.exe ..\..\inst\bin\windows"
-
-else
-
-all:
-	@echo "Using bundled ADMB binary"
-
-endif
+	@echo "Windows: using bundled ADMB binary in inst/bin/windows/"
