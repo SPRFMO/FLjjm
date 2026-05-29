@@ -2768,9 +2768,9 @@ FUNCTION Calc_Dependent_Vars
       Sp_Biom_NoFish(s,i) = N_NoFsh(s,i)*elem_prod(pow(exp(-M(s,i)),spmo_frac) , wt_mature(s)); 
 			if(i>styr)
        Sp_Biom_NoFishRatio(s,i) = Sp_Biom(s,i) / Sp_Biom_NoFish(s,i) ;
-    }
       depletion(s)         = totbiom(s,endyr)/totbiom(s,styr);
       depletion_dyn(s)     = totbiom(s,endyr)/totbiom_NoFish(s,endyr);
+    }
     B100(s) = phizero(cum_regs(s)+yy_sr(s,styr)) * mean(recruits(s)(styr_rec_est(s,1),endyr_rec_est(s,nreg(s)))); //Ojo
     //dvar_vector Nnext(1,nages);
     Nnext(s)(2,nages) = ++elem_prod(natage(s,endyr)(1,nages-1),S(s,endyr)(1,nages-1));
@@ -3475,7 +3475,7 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
       // 15% increase...but doesnt seem to be working yet...
         ftmp2.initialize();
 				// First line gives by each year
-        ftmp2 = SolveF3(endyr, nage_future(s,styr_fut), hcr_tac(s), s);
+        ftmp2 = SolveF3(endyr, nage_future(s,i), hcr_tac(s), s);
 		    // cout<<s<<" hcr_tac: "<<hcr_tac(s)<<" ftmp2 "<<ftmp2<<endl;
         for (k=1;k<=nfsh;k++){
           f_tmp(k)     = ftmp2*Fratio(k);
@@ -4971,7 +4971,11 @@ FUNCTION dvariable SolveF3(const int& iyr, const dvar_vector& N_tmp, const doubl
   dvar_vector Z_tmp(1,nages) ;
   dvar_vector S_tmp(1,nages) ;
   dvar_vector Ftottmp(1,nages);
-  dvariable btmp =  N_tmp * elem_prod(sel_fsh(1,iyr),wt_pop(istk));
+  dvariable btmp;
+  btmp.initialize();
+  for (k=1;k<=nfsh;k++)
+    if (sel_map(1,k) == istk)
+      btmp += N_tmp * elem_prod(sel_fsh(k,iyr),wt_fsh(k,endyr));
   dvariable ftmp;
   M_tmp = M(istk,iyr);
   ftmp = TACin/btmp;
@@ -5014,7 +5018,11 @@ FUNCTION dvariable SolveF2(const int& iyr, const dvar_vector& N_tmp, const doubl
   dvar_vector Z_tmp(1,nages) ;
   dvar_vector S_tmp(1,nages) ;
   dvar_vector Ftottmp(1,nages);
-  dvariable btmp =  N_tmp * elem_prod(sel_fsh(1,iyr),wt_pop(istk));
+  dvariable btmp;
+  btmp.initialize();
+  for (k=1;k<=nfsh;k++)
+    if (sel_map(1,k) == istk)
+      btmp += N_tmp * elem_prod(sel_fsh(k,iyr),wt_fsh(k,endyr));
   dvariable ftmp;
   M_tmp = M(istk,iyr);
   ftmp = TACin/btmp;
