@@ -1,12 +1,4 @@
 #!/bin/sh
 
-# Use where.exe to check Windows PATH (not MSYS2 PATH)
-ADMB_PATH=$(/c/Windows/System32/where.exe admb 2>/dev/null | head -1 | tr -d '\r')
-
-if [ -n "$ADMB_PATH" ]; then
-    echo "ADMB found at: $ADMB_PATH"
-    echo "HAVE_ADMB=1" > src/Makevars.local
-else
-    echo "ADMB not found; using bundled binaries"
-    echo "HAVE_ADMB=0" > src/Makevars.local
-fi
+echo "Windows: using bundled ADMB binary"
+echo "HAVE_ADMB=0" > src/Makevars.local
