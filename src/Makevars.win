@@ -7,8 +7,8 @@ TPL=../inst/admb/jjms.tpl
 ifeq ($(HAVE_ADMB),1)
 
 all:
-	cd ..\inst\admb && admb jjms.tpl
-	copy ..\inst\admb\jjms.exe ..\inst\bin\windows\
+	cd ../inst/admb && admb jjms.tpl
+	copy ../inst/admb/jjms.exe ../inst/bin/windows/
 
 else
 
