@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Use cmd.exe to search Windows PATH (not MSYS2 PATH)
-ADMB_PATH=$(cmd.exe /c "where admb" 2>/dev/null | head -1 | tr -d '\r')
+# Call where.exe directly - avoids cmd.exe version banner
+ADMB_PATH=$(/c/Windows/System32/where.exe admb 2>/dev/null | head -1 | tr -d '\r')
 
 if [ -n "$ADMB_PATH" ]; then
     echo "ADMB found at: $ADMB_PATH"
