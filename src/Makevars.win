@@ -1,5 +1,7 @@
 -include Makevars.local
 
+HAVE_ADMB := $(strip $(HAVE_ADMB))
+
 TPL=../inst/admb/jjms.tpl
 
 ifeq ($(HAVE_ADMB),1)
