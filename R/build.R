@@ -325,16 +325,22 @@ buildFLIsjjm <- function(out) {
   # LOAD output$sel_ind_* - @sel.pattern
   if(info$output$nStock == 2) {
 
-    # BUG: index by stock
-   idxsp1 <- lapply(paste0("sel_ind_", c(1:4, 7)), function(x) {
+    # NAMES by stock
+    sel1 <- names(outp[[1]])[grep("sel_ind_", names(outp[[1]]))]
+    sel2 <- names(outp[[2]])[grep("sel_ind_", names(outp[[2]]))]
+    selord <- sort(c(sel1, sel2))
+
+    # index by stock
+   idxsp1 <- lapply(setNames(nm=sel1), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })
-    idxsp2 <- lapply(paste0("sel_ind_", c(5, 6)), function(x) {
+    idxsp2 <- lapply(setNames(nm=sel2), function(x) {
       FLQuant(t(outp[[2]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[2]][[x]][,2]), units="", quant="age")
     })
-    idxsp <- FLQuants(c(idxsp1[c(1, 2, 3, 4)], idxsp2[c(1, 2)], idxsp1[c(5)]))
+    # MERGER in order
+   idxsp <- FLQuants(c(idxsp1, idxsp2)[selord])
   } else {
     idxsp <- lapply(paste0("sel_ind_", idx), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
@@ -345,22 +351,27 @@ buildFLIsjjm <- function(out) {
 
   # GET output$q_* - @index.q
   if(info$output$nStock == 2) {
-    
-    idxq1 <- lapply(paste0("q_", c(1:4, 7)), function(x) {
+
+    # NAMES by stock
+    iq1 <- names(outp[[1]])[grep("q_[0-9]", names(outp[[1]]))]
+    iq2 <- names(outp[[2]])[grep("q_[0-9]", names(outp[[2]]))]
+    iqord <- sort(c(iq1, iq2))
+   
+    idxq1 <- lapply(setNames(nm=iq1), function(x) {
       FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]),
         units="")
     })
-    idxq2 <- lapply(paste0("q_", c(5, 6)), function(x) {
+    idxq2 <- lapply(setNames(nm=iq2), function(x) {
       FLQuant(outp[[2]][[x]][,2], dimnames=list(year=outp[[2]][[x]][,1]), 
         units="")
     })
-    idxq <- FLQuants(c(idxq1[c(1, 2, 3, 4)], idxq2[c(1, 2)], idxq1[c(5)]))
+    # MERGER in order
+    idxq <- FLQuants(c(idxq1, idxq2)[iqord])
   } else {
     idxq <- lapply(paste0("q_", idx), function(x) {
       FLQuant(outp[[1]][[x]][,2], dimnames=list(year=outp[[1]][[x]][,1]), units="")
     })
   }
-  
   names(idxq) <- nms
 
   # GET index timing

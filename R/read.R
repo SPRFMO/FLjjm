@@ -380,8 +380,12 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
   } else if (nstks == 2) {
     stk <- lapply(seq(2), function(i)
       propagate(buildFLSojjm(mod, i), iter=iter))
-    Southern <- list(stk=stk[[1]], idx=idx[c(1,2,3,4,7)])
-    North <- list(stk=stk[[2]], idx=idx[c(5,6)])
+
+    id1 <- c(mod[[1]]$output[[1]][[grep("CPUE", (mod[[1]]$output[[1]]))]])
+    id2 <- c(mod[[1]]$output[[2]][[grep("CPUE", (mod[[1]]$output[[2]]))]])
+
+    Southern <- list(stk=stk[[1]], idx=idx[id1])
+    North <- list(stk=stk[[2]], idx=idx[id2])
     obs <- list(Southern=Southern, North=North)#, dat=dat, ctl=ctl)
   }
 
@@ -392,8 +396,8 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
   if(nstks == 1) {
     devs <- list(CJM=list(idx=res))
   } else if (nstks == 2) {
-    Southern <- list(idx=res[c(1,2,3,4,7)])
-    North <- list(idx=res[c(5,6)])
+    Southern <- list(idx=res[id1])
+    North <- list(idx=res[id2])
     devs <- list(Southern=Southern, North=North)
   }
 
