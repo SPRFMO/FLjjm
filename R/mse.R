@@ -440,13 +440,12 @@ cjm.iem <- function(ctrl, args, tracking, F3prop, correction = NULL) {
   ratio3[fscatch == 0] <- 1
 
   # MIMIC separate decision for fishery 3
-  iters(ctrl)[3, 2, ] <- (c(F3prop[, ac(mys)]) * iters(ctrl)[3, 2, ]) / ratio3
+  iters(ctrl)[3 * seq(1, length(mys)), 2, ] <- (c(F3prop[, ac(mys)]) *
+    iters(ctrl)[3 * seq(1, length(mys)),   2, ]) / ratio3
 
   # TRACK new total catch
   #   track(tracking, "tac.iem", ay) <- c(apply(iters(ctrl)[, 2, , drop = FALSE],
   #  c(2,3), sum))
-
-  # TODO: TRACK catch by fishery
 
   return(list(ctrl = ctrl, tracking = tracking))
 }
