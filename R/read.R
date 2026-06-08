@@ -352,11 +352,11 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
     iter <- 1
 
   # dat & ctl
-  dat <- mod[[1]]$data
-  ctl <- mod[[1]]$control
+#  dat <- mod[[1]]$data
+#  ctl <- mod[[1]]$control
 
-  dat <- setNames(rep(list(dat), iter), nm=seq(iter))
-  ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
+#  dat <- setNames(rep(list(dat), iter), nm=seq(iter))
+#  ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
 
   # GET No. stocks
   nstks <- mod[[1]]$info$output$nStock
@@ -381,11 +381,12 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
     stk <- lapply(seq(2), function(i)
       propagate(buildFLSojjm(mod, i), iter=iter))
 
-    id1 <- c(mod[[1]]$output[[1]][[grep("CPUE", (mod[[1]]$output[[1]]))]])
-    id2 <- c(mod[[1]]$output[[2]][[grep("CPUE", (mod[[1]]$output[[2]]))]])
+    id1 <- c(mod[[1]]$output[[1]]$Index_names)
+    id2 <- c(mod[[1]]$output[[2]]$Index_names)
 
     Southern <- list(stk=stk[[1]], idx=idx[id1])
     North <- list(stk=stk[[2]], idx=idx[id2])
+    
     obs <- list(Southern=Southern, North=North)#, dat=dat, ctl=ctl)
   }
 

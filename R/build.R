@@ -331,7 +331,7 @@ buildFLIsjjm <- function(out) {
     selord <- sort(c(sel1, sel2))
 
     # index by stock
-   idxsp1 <- lapply(setNames(nm=sel1), function(x) {
+    idxsp1 <- lapply(setNames(nm=sel1), function(x) {
       FLQuant(t(outp[[1]][[x]][, -c(1:2)]),
         dimnames=list(year=outp[[1]][[x]][,2]), units="", quant="age")
     })

@@ -3,7 +3,7 @@
 UNAME_S=$(uname -s)
 
 if [ "$UNAME_S" = "Darwin" ]; then
-    BIN_DIR="inst/bin/macos"
+    BIN_DIR="inst/bin/osx"
 else
     BIN_DIR="inst/bin/linux"
 fi

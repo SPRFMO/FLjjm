@@ -328,7 +328,7 @@ DATA_SECTION
 	int fut_sel;
 	int msy_sel;
  LOCAL_CALCS
-  msy_sel=15;
+  msy_sel =15;
   log_input(msy_sel);
   fut_sel = 0;
   if ( (on=option_match(argc,argv,"-fut_sel"))>-1)
@@ -337,6 +337,13 @@ DATA_SECTION
     cout<<"Got to fut_sel "<<fut_sel<<endl;
   }
   log_input(fut_sel);
+  if ( (on=option_match(argc,argv,"-msy_sel"))>-1)
+  {
+    msy_sel = atof(argv[on+1]);
+    cout<<"Got to msy_sel "<<msy_sel<<endl;
+  } 
+  log_input(msy_sel);
+
 
   if ( (on=option_match(argc,argv,"-tac"))>-1)
   {
@@ -1699,6 +1706,7 @@ PARAMETER_SECTION
   sdreport_vector Bcur_Bmsy(1,nstk);
   sdreport_vector pred_ind_nextyr(1,nind);
   sdreport_vector OFL(1,nstk);
+  sdreport_matrix Fbar(1,nstk,styr,endyr);
   // NOTE TO DAVE: Need to have a phase switch for sdreport variables(
   3darray catch_future(1,nstk,1,5,styr_fut,endyr_fut); // Note, don't project for F=0 (it will bomb)
   //sdreport_matrix SSB_fut(1,5,styr_fut,endyr_fut) //Ojo
@@ -1931,13 +1939,14 @@ PROCEDURE_SECTION
   evaluate_the_objective_function();
   if (last_phase()) Get_Replacement_Yield();
 
+  // 3darray Ftot(1,nstk,styr,endyr,1,nages)
   // Output calcs-------------------------
   // if (sd_phase()) // this gets executed in mcmc too
   // if (!mc_phase() && sd_phase()) // for some reason this failed on linux...and PC, but not MacOSx
   if (last_phase())
   {
     // cout<<"doing Depend var calcs"<<endl;
-    //compute_spr_rates();
+    compute_spr_rates();
     Calc_Dependent_Vars();
   }
   // Other calcs-------------------------
@@ -2809,6 +2818,13 @@ FUNCTION Calc_Dependent_Vars
   }
   if (phase_proj>0) 
 		Future_projections();
+  if (sd_phase())
+    if (!Popes)
+    for (int kk=1;kk<=nfsh;kk++)
+      Ftot(sel_map(1,kk)) += F(kk);
+    for (int k=1;k<=nstk;k++)
+      for (i=styr;i<=endyr;i++) 
+	      Fbar(k,i) = Ftot(k,i)(2,5) * natage(k,i)(2,5) /sum(natage(k,i)(2,5));// Age-2 to 5 mean F
   
 FUNCTION void Catch_at_Age(const int& s, const int& i)
   dvariable vbio=0.;
@@ -3101,7 +3117,29 @@ FUNCTION Fmort_Pen
     fpen(1) += 1.* norm2(F - .2);
   else 
 	{
-    fpen(1) += 0.0001*norm2(F - .2); 
+  double Fcap = 3.0;
+  double eps = 0.05;
+  double lambda_F = 10.0;
+
+  for (s=1; s<=nstk; s++)
+  {
+    for (i=styr; i<=endyr; i++)
+    {
+      dvar_vector Fage(1,nages);
+      Fage.initialize();
+
+      for (k=1; k<=nfsh; k++)
+        if (sel_map(1,k) == s)
+          Fage += F(k,i);
+
+      dvariable Fbar_tmp = mean(Fage(2,5));
+      dvariable x = Fbar_tmp - Fcap;
+      dvariable excess = 0.5 * (x + sqrt(x*x + eps*eps));
+
+      fpen(1) += lambda_F * square(excess);
+    }
+  }
+   // fpen(1) += 0.0001*norm2(F - .2); 
 		// Add extreme penalty to fmort when catches are zero to stabilize MCMC mixing
   for (int ii=1;ii<=nyrs_zero_catch;ii++)
 	  fpen(2) += square(fmort(fsh_zero_catch(ii),yrs_zero_catch(ii))+14)*100.;
@@ -3439,7 +3477,7 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
     switch (iscenario)
     {
       case 1:
-        // no multiplcation needed...its 1.0.F_fut_tmp *= 1.087;
+        // no multiplcation needed...it's 1.0...F_fut_tmp *= 1.087;
         // f_tmp = F35;
         // for (int k=1;k<=nfsh;k++) f_tmp(k) = SolveF2(endyr,nage_future(i), 1.0  * catch_lastyr(k));
         break;
@@ -3472,10 +3510,10 @@ FUNCTION void get_future_Fs(const int& s,const int& i,const int& iscenario)
         for (int k=1;k<=nfsh;k++) F_fut_tmp(k) = sel_fut(k)*Fratio(k)*Fmsy(s); // mean(F(k,endyr));
         break;
       case 5:
-      // 15% increase...but doesnt seem to be working yet...
+      // 15% increase...but doesn't seem to be working yet...
         ftmp2.initialize();
 				// First line gives by each year
-        ftmp2 = SolveF3(endyr, nage_future(s,styr_fut), hcr_tac(s), s);
+        ftmp2 = SolveF3(endyr, nage_future(s,i), hcr_tac(s), s);
 		    // cout<<s<<" hcr_tac: "<<hcr_tac(s)<<" ftmp2 "<<ftmp2<<endl;
         for (k=1;k<=nfsh;k++){
           f_tmp(k)     = ftmp2*Fratio(k);
@@ -3612,7 +3650,7 @@ FUNCTION Future_projections
           /*   */
         }
       }
-    }   //End of loop over Fs
+    }   //End of loop over F's
     Sp_Biom(s,styr_fut) = Sp_Biom_future(s,styr_fut);
   } //End over stocks
 
@@ -3984,7 +4022,7 @@ FUNCTION dvariable yield(const dvar_vector& Fratio, dvariable& Ftmp, dvariable& 
   // dvar_matrix seltmp(1,nfsh,1,nages);
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
-      seltmp(k) = sel_msy(k); // NOTE uses last-year of fishery selectivity for projections.
+      seltmp(k) = sel_msy(k); 
 	// seltmp = sel_msy;
 
   dvar_matrix Fatmp(1,nfsh,1,nages);
@@ -4187,7 +4225,7 @@ FUNCTION dvariable Requil(dvariable& phi, int iyr, int istk)
   return RecTmp;
   
 FUNCTION write_mceval_hdr
-    mceval<<"mcdraw type unit Year Age value"<<endl;
+    mceval<<"mcdraw type Year Age value"<<endl;
    /*
     for (k=1;k<=nind;k++)
       mceval<< " q_ind_"<< k<< " ";
@@ -4243,9 +4281,6 @@ REPORT_SECTION
         Francis_wts(k+nfsh) = calc_Francis_weights( oac_ind(k), eac_ind(k), n_sample_ind_age(k), mina(k) );
     }
 
-    if (!Popes)
-      for (k=1;k<=nfsh;k++)
-        Ftot(sel_map(1,k)) += F(k);
     for (int r=1;r<=nmort;r++)
     {
       log_param(Mest(r));
@@ -4851,11 +4886,17 @@ GLOBALS_SECTION
 FUNCTION dvariable get_spr_rates(double spr_percent,int istk)
   RETURN_ARRAYS_INCREMENT();
   dvar_matrix sel_tmp(1,nages,1,nfsh);
+  // matrix sel_msy(1,nfsh,1,nages)
   sel_tmp.initialize();
   for (k=1;k<=nfsh;k++)
     if (sel_map(1,k) == istk)
       for (j=1;j<=nages;j++)
+        sel_tmp(j,k) = sel_msy(k,j);
+  /* for (k=1;k<=nfsh;k++)
+    if (sel_map(1,k) == istk)
+      for (j=1;j<=nages;j++)
         sel_tmp(j,k) = sel_fsh(k,endyr,j); // NOTE uses last-year of fishery selectivity for projections.
+	*/ 
   dvar_vector sumF(1,nstk);
   sumF.initialize();
   for (k=1;k<=nfsh;k++)
@@ -4933,6 +4974,7 @@ FUNCTION dvariable spr_unfished(int istk,int i)
 
 FUNCTION compute_spr_rates
   //Compute SPR Rates and add them to the likelihood for Females 
+  get_future_sel();
   dvar_vector sumF(1,nstk);
   sumF.initialize();
   for (k=1;k<=nfsh;k++)
@@ -4971,7 +5013,11 @@ FUNCTION dvariable SolveF3(const int& iyr, const dvar_vector& N_tmp, const doubl
   dvar_vector Z_tmp(1,nages) ;
   dvar_vector S_tmp(1,nages) ;
   dvar_vector Ftottmp(1,nages);
-  dvariable btmp =  N_tmp * elem_prod(sel_fsh(1,iyr),wt_pop(istk));
+  dvariable btmp;
+  btmp.initialize();
+  for (k=1;k<=nfsh;k++)
+    if (sel_map(1,k) == istk)
+      btmp += N_tmp * elem_prod(sel_fsh(k,iyr),wt_fsh(k,endyr));
   dvariable ftmp;
   M_tmp = M(istk,iyr);
   ftmp = TACin/btmp;
@@ -5014,7 +5060,11 @@ FUNCTION dvariable SolveF2(const int& iyr, const dvar_vector& N_tmp, const doubl
   dvar_vector Z_tmp(1,nages) ;
   dvar_vector S_tmp(1,nages) ;
   dvar_vector Ftottmp(1,nages);
-  dvariable btmp =  N_tmp * elem_prod(sel_fsh(1,iyr),wt_pop(istk));
+  dvariable btmp;
+  btmp.initialize();
+  for (k=1;k<=nfsh;k++)
+    if (sel_map(1,k) == istk)
+      btmp += N_tmp * elem_prod(sel_fsh(k,iyr),wt_fsh(k,endyr));
   dvariable ftmp;
   M_tmp = M(istk,iyr);
   ftmp = TACin/btmp;
