@@ -3,9 +3,9 @@
 UNAME_S=$(uname -s)
 
 if [ "$UNAME_S" = "Darwin" ]; then
-    BIN_DIR="inst/bin/osx"
+    BIN_DIR="bin/osx"
 else
-    BIN_DIR="inst/bin/linux"
+    BIN_DIR="bin/linux"
 fi
 
 if command -v admb >/dev/null 2>&1; then
