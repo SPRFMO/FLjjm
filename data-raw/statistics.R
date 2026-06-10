@@ -25,4 +25,10 @@ statistics$PCtarget <- list(~yearMeans(decision.hcr > 1), name="P(C<target)",
 statistics$PTAClimit <- list(~yearMeans(FLQuant(rule.hcr < hcr)), name="P(TAClimit)",
   desc="Probability of TAC being limited")
 
+# F38
+statistics$F38 <- list(~F38, name="F38", desc="Mean fishing mortality ages 3-8")
+
+# FN, Fbar weighted by N
+statistics$FN <- list(~FN, name="FN", desc="Mean fishing mortality weighted by abundance")
+
 save(statistics, file="../data/statistics.RData", compress="xz")
