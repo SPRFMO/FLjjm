@@ -38,8 +38,8 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
 
     # Add F3 length samples
     f3lengths <- lapply(seq(it), function(j) {
-      cjmage2len(iter(landings.n(res$stk)[,,,,3][, dyrs], j),
-        iter(expand(F3sel, year = dyrs), j))
+      cjmage2len(iter(landings.n(res$stk)[,,,,3][, ac(dys)], j),
+        iter(expand(F3sel, year = ac(dys)), j))
     })
 
     # CREATE dat & ctl

@@ -352,11 +352,11 @@ readFLoemjjm <- function(name, path, method=cjm.oem, iter=NULL, ...) {
     iter <- 1
 
   # dat & ctl
-#  dat <- mod[[1]]$data
-#  ctl <- mod[[1]]$control
+  dat <- mod[[1]]$data
+  ctl <- mod[[1]]$control
 
-#  dat <- setNames(rep(list(dat), iter), nm=seq(iter))
-#  ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
+  dat <- setNames(rep(list(dat), iter), nm=seq(iter))
+  ctl <- setNames(rep(list(ctl), iter), nm=seq(iter))
 
   # GET No. stocks
   nstks <- mod[[1]]$info$output$nStock
