@@ -1985,7 +1985,7 @@ FUNCTION write_mceval
       mceval<< mc_count<<" Recruits "<<k<<" "<<i<<" age_"<<rec_age<<" "<<recruits(k,i)<<  endl;
       mceval<< mc_count<<" Deviances "<<k<<" "<<i<<" "<<rec_age<<" "<<mfexp(rec_dev(k,i))<<  endl;
     // ADD Bmsy(y) - IM
-    get_msy(i);
+    get_msy_robust(i);
     mceval<< mc_count<<" SBMSYy  "<<k<<" "<<i<<" all "<<Bmsy(k)<<  endl;
       for (j=1;j<=nages;j++) 
       {
@@ -2686,8 +2686,16 @@ FUNCTION Get_Survey_Predictions
     // Set rest of q's in time series equal to the random walk for current (avoids tricky tails...)
     for (i=2;i<=(1+npars_rw_q(k));i++)
     {
-      // get index for the number of observations (can be different than number of q's)
-      ii = yrs_rw_q(k,i-1) - yrs_ind(k,1) + 1;  
+      // Map q change years to survey-observation rows; observations can be sparse.
+      ii = nyrs_ind(k);
+      for (int iobs=1;iobs<=nyrs_ind(k);iobs++)
+      {
+        if (yrs_ind(k,iobs)>=yrs_rw_q(k,i-1))
+        {
+          ii = iobs;
+          break;
+        }
+      }
       q_ind(k,ii)  = q_ind(k,ii-1)*mfexp(log_rw_q_ind(k,i-1));
       for (iyr=ii+1;iyr<=nyrs_ind(k);iyr++)
         q_ind(k,iyr)  = q_ind(k,ii);
@@ -3735,6 +3743,91 @@ FUNCTION get_msy
     }
   }
 
+FUNCTION void get_msy_robust(int iyr)
+  /*
+   Robust dynamic MSY calculation for msy_mt reporting. This report-only
+   routine searches a bounded F grid and keeps only feasible equilibrium
+   points, avoiding Newton steps into negative recruitment/yield.
+  */
+
+  dvar_vector sumF(1,nstk);
+  sumF.initialize();
+
+  for (k=1;k<=nfsh;k++)
+    sumF(sel_map(1,k)) += sum(F(k,iyr));
+
+  for (k=1;k<=nfsh;k++)
+    Fratio(k) = sum(F(k,iyr)) / (sumF(sel_map(1,k)) + 1.e-12);
+
+  double Fmin      = 1.e-04;
+  double Fmax      = 5.0;
+  double pos_floor = 1.e-10;
+  int ngrid        = 500;
+
+  for (int istk=1; istk<=nstk; istk++)
+  {
+    int valid_msy;
+    valid_msy = 0;
+
+    dvariable bestF;
+    dvariable bestY;
+    dvar_vector best(1,5);
+    best.initialize();
+    bestF = Fmin;
+    bestY = -1.e30;
+
+    for (int ig=0; ig<=ngrid; ig++)
+    {
+      dvariable Ftry;
+      Ftry = Fmin * mfexp(log(Fmax / Fmin) * double(ig) / double(ngrid));
+
+      dvar_vector ttt(1,5);
+      ttt = yld(Fratio, Ftry, istk, iyr);
+
+      if (value(ttt(1)) > 0.0 &&
+          value(ttt(2)) > 0.0 &&
+          value(ttt(3)) > 0.0 &&
+          value(ttt(5)) > 0.0 &&
+          value(ttt(2)) > value(bestY))
+      {
+        valid_msy = 1;
+        bestF = Ftry;
+        bestY = ttt(2);
+        best = ttt;
+      }
+    }
+
+    if (valid_msy == 1)
+    {
+      Fmsy(istk)      = bestF;
+      Rmsy(istk)      = best(3);
+      MSY(istk)       = best(2);
+      Bmsy(istk)      = best(1);
+      MSYL(istk)      = best(1) / (Bzero(cum_regs(istk)+yy_sr(istk,iyr)) + pos_floor);
+      lnFmsy(istk)    = log((best(2) + pos_floor) / (best(5) + pos_floor));
+      Bcur_Bmsy(istk) = Sp_Biom(istk,iyr) / (best(1) + pos_floor);
+    }
+    else
+    {
+      Fmsy(istk)      = Fmin;
+      Rmsy(istk)      = 0.0;
+      MSY(istk)       = 0.0;
+      Bmsy(istk)      = 0.0;
+      MSYL(istk)      = 0.0;
+      lnFmsy(istk)    = 0.0;
+      Bcur_Bmsy(istk) = 0.0;
+    }
+
+    dvariable FFtmp;
+    FFtmp.initialize();
+
+    for (k=1;k<=nfsh;k++)
+      if (sel_map(1,k) == istk)
+        FFtmp += mean(F(k,iyr));
+
+    Fcur_Fmsy(istk) = FFtmp / (Fmsy(istk) + pos_floor);
+  }
+
 FUNCTION void get_msy(int iyr)
  /*Function calculates used in calculating MSY and MSYL for a designated component of the
   population, given values for stock recruitment and selectivity...  
@@ -4083,7 +4176,7 @@ FUNCTION Profile_F
   dvariable dyldp;
   prof_F <<"Profile of stock, yield, and recruitment over F"<<endl;
   prof_F << model_name<<" "<<datafile_name<<endl;
-  prof_F <<endl<<endl<<"F  Stock  Yld  Recruit SPR"<<endl;
+  prof_F <<endl<<endl<<"Stock_ID F  Stock  Yld  Recruit SPR"<<endl;
   for (s=1;s<=nstk;s++)
   {
     for (r=1;r<=nreg(s);r++)
@@ -4094,7 +4187,7 @@ FUNCTION Profile_F
       F1    = double(ii)/500;
       yld1  = yield(Fratio,F1,Stmp,Rtmp,s);
       ttt   = yld(Fratio,F1,s);
-      prof_F <<F1<<" "<< ttt << endl; 
+      prof_F <<s<<" "<<F1<<" "<< ttt << endl; 
     }
     prof_F <<endl;
   }
@@ -6747,7 +6840,7 @@ FUNCTION Write_R
         if (sel_map(1,k) == s)
           for (j=1;j<=nages;j++)
             sel_tmp(j,k) = sel_fsh(k,i,j); 
-      get_msy(i);
+      get_msy_robust(i);
       // important for time-varying natural mortality...
       //dvariable spr_mt_ft = spr_ratio(sumF(s),sel_tmp,i,s)  ;
       spr_mt_ft = spr_ratio(sumF(s),sel_tmp,i,s)  ;
@@ -6792,7 +6885,7 @@ FUNCTION Write_R
         if (sel_map(1,k) == s)
           for (j=1;j<=nages;j++)
             sel_tmp(j,k) = sel_fsh(k,i,j); 
-      get_msy(i);
+      get_msy_robust(i);
       sumF /= nages;
       // important for time-varying natural mortality...
       dvariable spr_mt_ft = spr_ratio(sumF(s),sel_tmp,i,s)  ;
