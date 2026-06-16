@@ -2049,6 +2049,7 @@ FUNCTION write_mceval
   // sdreport_matrix Sp_Biom(1,nstk,styr_sp,endyr+1)
   mc_count++;
     // mceval<<"mcdraw type unit Year Age value"<<endl;
+    // mceval<<"mcdraw type Year Age value"<<endl;
   for (int k=1;k<=nstk;k++)
   {
     for (i=styr;i<=endyr;i++)
@@ -7098,5 +7099,4 @@ FUNCTION double calc_Francis_weights(dmatrix oac, dvar_matrix eac, ivector sam,c
     // lfwt(k) *= lf_lambda(k);
     return lfwt;
   }
-
 
