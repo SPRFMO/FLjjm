@@ -31,4 +31,7 @@ statistics$F38 <- list(~F38, name="F38", desc="Mean fishing mortality ages 3-8")
 # FN, Fbar weighted by N
 statistics$FN <- list(~FN, name="FN", desc="Mean fishing mortality weighted by abundance")
 
+# TODO: ADD MSY, needs VB in metrics(om)
+# statistics$UMSY <- list(~VB/MSY, name="UMSY", desc="Vulnerable biomass relative to MSY level")
+
 save(statistics, file="../data/statistics.RData", compress="xz")

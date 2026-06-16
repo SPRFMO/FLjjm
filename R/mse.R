@@ -27,7 +27,8 @@ cjm.oem <- function(stk, deviances, observations, stability=1,
   #  res$idx[[2]] <- res$idx[[2]][, -39]
 
   # UPDATE idx: 2, 3, 6, 7
-  for(i in nidx[nidx %in% c("Chile_AcousN", "Chile_CPUE", "Peru_CPUE", "Offshore_CPUE")])
+  fids <- c("Chile_AcousN", "Chile_CPUE", "Peru_CPUE", "Offshore_CPUE", "Peru_Artis", "Peru_Ind")
+  for(i in nidx[nidx %in% fids])
     observations$idx[[i]][, ac(dys)] <- res$idx[[i]][, ac(dys)]
 
   # DROP last year from idx[[7]]
