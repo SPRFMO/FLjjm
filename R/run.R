@@ -101,9 +101,6 @@ jjms <- function(stock, indices, dat=attr(stock, "dat"), ctl=attr(stock, "ctl"),
       stock.n(stock[[2]]) <- out$stock.n[[2]]
       harvest(stock[[1]]) <- out$harvest[[1]]
       harvest(stock[[2]]) <- out$harvest[[2]]
-      
-      message("run.R:103")
-      browser()
     }
 
   # OM runs using for()

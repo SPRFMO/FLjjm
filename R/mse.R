@@ -452,3 +452,16 @@ cjm.iem <- function(ctrl, args, tracking, F3prop, correction = NULL) {
 }
 
 # }}}
+
+# fbar 38 & fbarN {{{
+fbar38 <- function(object) {
+  fbar(object, minfbar=3, maxfbar=8)
+}
+
+fbarN <- function(object) {
+  FLQuants(lapply(setNames(nm=names(biols(object))), function(i)
+    quantMeans(quantSums(harvest(object)[[i]] * n(object)[[i]]) /
+    quantSums(n(object)[[i]]))))
+}
+
+# }}}
