@@ -31,8 +31,6 @@ export(
   "cjm.oem",
   "cjmage2len",
   "exejjms",
-  "fbar38",
-  "fbarN",
   "fwdmov",
   "fwdmov.om",
   "get_os",

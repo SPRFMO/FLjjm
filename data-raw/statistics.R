@@ -30,22 +30,25 @@ statistics$PTAClow <- list(~yearMeans(FLQuant(decision.hcr > hcr)), name="P(TACl
   desc="Probability of TAC being limited from decreasing")
 
 # F38
-# statistics$F38 <- list(~F38, name="F38", desc="Mean fishing mortality ages 3-8")
+statistics$F38 <- list(~F38, name="Fbar38", desc="Mean fishing mortality ages 3-8")
 
 # FN, Fbar weighted by N
-# statistics$FN <- list(~FN, name="FN",
-#  desc="Mean fishing mortality weighted by abundance")
+statistics$FN <- list(~FN, name="FbarbyN",
+ desc="Mean fishing mortality weighted by abundance")
 
 # VB relative to iy
-#statistics$relVB <- list(~VB2025, name="VB/VB[2025]",
-#  desc="Vulnerable biomass relative to that in 2025")
+statistics$VB2025 <- list(~VB2025, name="VB/VB[2025]",
+  desc="Vulnerable biomass relative to that in 2025")
 
-# TODO: ADD MSY, needs VB in metrics(om)
-# statistics$UMSY <- list(~VB/MSY, name="UMSY", desc="Vulnerable biomass relative to MSY level")
+statistics$UMSY <- list(~VB/MSY, name="UMSY", desc="Vulnerable biomass relative to MSY level")
 
-save(statistics, file="../data/statistics.RData", compress="xz")
+# SB0MSY
+statistics$SB0MSY <- list(~SB / ((SBMSY / SB0) * dSB0), name="SB0MSY",
+  desc="Spawning biomass relative to MSY computed over dynamic unfished SB0")
 
+statistics$SB0green <- list(~iterMeans(FLQuant((SB/((SBMSY / SB0) * dSB0)) >= 1 &
+  (F/FMSY) <= 1)), name="P(SB0Green)",
+  desc="Probability of being in SB0MSY-based Kobe green quadrant")
 
-#
-
-
+# SAVE
+save(statistics, file ="../data/statistics.RData", compress="xz")

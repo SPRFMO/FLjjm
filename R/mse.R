@@ -432,7 +432,7 @@ cjm.iem <- function(ctrl, args, tracking, F3prop, correction = NULL) {
 
   # GET F3 and total catch
   f3catch <- c(iters(ctrl)[3, 2, , drop = FALSE])
-  fscatch <- c(apply(iters(ctrl)[, 2, , drop = FALSE], 2:3, sum))
+  fscatch <- c(apply(iters(ctrl)[1:4, 2, , drop = FALSE], 2:3, sum, na.rm=TRUE))
 
   # COMPUTE current F3 ratio
   ratio3 <- f3catch / fscatch
@@ -453,15 +453,18 @@ cjm.iem <- function(ctrl, args, tracking, F3prop, correction = NULL) {
 
 # }}}
 
-# fbar 38 & fbarN {{{
-fbar38 <- function(object) {
+# metrics: F38, FB, VB2026 {{{
+
+F38 <- function(object) {
   fbar(object, minfbar=3, maxfbar=8)
 }
 
-fbarN <- function(object) {
-  FLQuants(lapply(setNames(nm=names(biols(object))), function(i)
-    quantMeans(quantSums(harvest(object)[[i]] * n(object)[[i]]) /
-    quantSums(n(object)[[i]]))))
+FN <- function(x) {
+  lapply(harvest(x) * n(x), quantSums) / lapply(n(x), quantSums)
+}
+
+VB2025 <- function(x, year='2025') {
+  lapply(vb(x), function(y) y %/% y[, year])
 }
 
 # }}}
